@@ -1,6 +1,6 @@
 # Spec: Prode Mundial 2026
 
-> Estado: **DRAFT** — pendiente de pasar por `/speckit-clarify` antes de `/speckit-plan`.
+> Estado: **CLARIFIED** — clarificaciones resueltas en [clarifications.md](./clarifications.md). Pendiente `/speckit-constitution` antes de `/speckit-plan`.
 
 ## Qué
 
@@ -24,32 +24,42 @@ Aplicación web mobile-first para que un grupo cerrado de ~15 amigos haga su pro
 
 **Auth y usuarios**
 - Login con Google (NextAuth)
-- Whitelist por email: solo invitados pueden entrar
-- Perfil mínimo (nombre, avatar de Google, equipo favorito opcional)
+- **Self-signup con aprobación:** cualquiera con cuenta Google puede registrarse. Queda en estado `pending` hasta que el admin lo apruebe desde `/admin/users`
+- Admin identificado por env var `ADMIN_EMAIL=fernandezfederico1899@gmail.com`
+- Estados de usuario: `pending | approved | rejected`
+- Perfil mínimo (nombre, avatar de Google, equipo favorito opcional, checkbox opt-out de mails)
 
 **Fixture y resultados**
 - Seed inicial desde [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) (sin API key, público)
+- Mapping openfootball ↔ API-Sports automático por `(kickoff_at ± 1h, home_team, away_team)` con normalización de nombres de equipos
+- Estados de partido: `scheduled | live | finished | postponed | cancelled`
+  - `postponed`: al setear nueva fecha desde admin, pronósticos se reabren hasta nuevo kickoff
+  - `cancelled`: no suma puntos a nadie, se muestra "anulado"
 - Sync de resultados en vivo vía API-Sports free tier:
-  - Polling cada **3 min** durante ventanas de partido usando `/fixtures?live=all` (1 req cubre todos los partidos en vivo)
-  - Si no hay partidos en vivo, no se consume request
-  - Logging de uso diario para detectar si se acerca al límite de 100 req/día
-- Panel admin para corregir resultados manualmente (recalcula puntos)
+  - Cron de Vercel cada 3 min, **solo en ventanas calculadas del fixture** (no 24/7)
+  - El cron consulta DB primero: si no hay partido en estado `live` o próximo a empezar, no llama a API
+  - Cuando hay live, usa `/fixtures?live=all` (1 req cubre todos los partidos simultáneos)
+  - Logging de uso diario para alertar si se acerca al límite de 100 req/día
+- Panel admin para corregir resultados manualmente (dispara recálculo de puntos)
 
 **Pronósticos por partido**
-- Carga de score (ej 2-1) hasta el kickoff
+- Carga de score (ej 2-1) hasta el kickoff. Rango válido: 0-15 por equipo
 - Cierre automático al kickoff (timezone America/Argentina/Buenos_Aires)
-- Edición libre hasta el cierre
-- Vista post-kickoff: pronósticos de todos los jugadores visibles
+- Edición libre hasta el cierre (solo se guarda el último valor, sin historial)
+- Vista post-kickoff: pronósticos de todos los jugadores visibles al instante del kickoff
 - Eliminatoria: partido por partido (se desbloquea cuando se definen los cruces)
+- **Score en eliminatoria:** resultado a los 90 minutos reglamentarios. Alargue y penales NO cuentan para el prode. Si predijiste empate y se definió por penales, cobrás como empate.
 
 **Pronósticos especiales (bonus pre-torneo)**
 - Campeón: 20 pts
 - Subcampeón: 10 pts
 - Tercer puesto: 5 pts
-- Goleador del torneo: 15 pts
-- Revelación (jugador): 10 pts
-- Decepción (equipo): 5 pts
+- Goleador del torneo (Bota de Oro FIFA): 15 pts
+- Mejor jugador del torneo (Balón de Oro FIFA): 10 pts
+- País más goleador del torneo: 5 pts
 - Cierre: kickoff del primer partido del torneo (11/06/2026)
+
+Todos los bonus son **objetivos** (los define FIFA al final del torneo o se calculan automáticamente sumando goles).
 
 **Sistema de puntaje (clásico 3/1)**
 - 3 pts: resultado exacto
@@ -61,28 +71,39 @@ Aplicación web mobile-first para que un grupo cerrado de ~15 amigos haga su pro
 - Ranking general en tiempo real
 - Ranking por fase (grupos / octavos / cuartos / semis / final)
 - Detalle por jugador: aciertos exactos, signos, errados, racha
-- Desempate: cantidad de resultados exactos > cantidad de signos acertados
+- Desempates en orden:
+  1. Puntos totales (desc)
+  2. Cantidad de resultados exactos (desc)
+  3. Cantidad de signos acertados (desc)
+  4. **Si persiste el empate: posición compartida.** En caso de ser ganadores, el pozo se reparte en partes iguales (50/50 si son 2, 33/33/33 si son 3, etc).
 
 **Pozo en plata**
 - Monto por jugador configurable desde panel admin (en ARS)
+- **El monto queda lockeado al kickoff del primer partido del torneo** (después no se puede editar)
 - Admin marca quién pagó (checkbox)
-- Lista pública de pagos al día (transparencia)
-- Cálculo del pozo total en vivo
-- Ganador final se lleva todo
+- Lista pública con "✓ pagó" o "✗ debe" para cada jugador (transparencia)
+- Jugadores que no pagaron siguen jugando (no se los saca de la tabla)
+- Cálculo del pozo total en vivo (suma de pagados)
+- Ganador final se lleva todo. Si hay empate en primer lugar, se reparte en partes iguales
 - Pagos por fuera de la app (transferencias), la app solo trackea
 
 **Notificaciones (Resend)**
-- Mail 1h antes del kickoff si el jugador NO cargó pronóstico
+- Mail 1h antes del kickoff si el jugador NO cargó pronóstico (respetando opt-out)
 - Mail al finalizar cada fecha con resumen y nueva tabla
 - Mail final con ganador y monto del pozo
+- Cada jugador puede optar-out desde `/profile` (default: opt-in)
+- No hay push notifications (solo mail)
 
 **Panel admin**
-- Invitar/remover emails de whitelist
-- Configurar monto del pozo
+- Aprobar/rechazar usuarios pendientes (`pending` → `approved` o `rejected`)
+- Configurar monto del pozo (solo antes del primer kickoff del torneo)
 - Marcar pagos
 - Corregir resultados (dispara recálculo)
+- Setear nueva fecha a partidos `postponed`
+- Anular partidos (`cancelled`)
+- Resolver bonus especiales al final del torneo (campeón, goleador, mejor jugador, etc) → dispara cálculo de bonus
 - Forzar resync del fixture desde openfootball
-- Ver logs de errores de sync y uso de API-Sports
+- Ver logs de errores de sync y uso diario de API-Sports
 
 ### No incluye
 
@@ -130,21 +151,26 @@ Aplicación web mobile-first para que un grupo cerrado de ~15 amigos haga su pro
 ## Criterios de aceptación
 
 ### Auth y acceso
-- [ ] DADO un email NO invitado CUANDO intenta loguearse ENTONCES la app lo rechaza con mensaje claro
-- [ ] DADO un email invitado CUANDO se loguea con Google por primera vez ENTONCES se crea su perfil automáticamente
-- [ ] DADO un jugador no-admin CUANDO accede a `/admin` ENTONCES recibe 403
+- [ ] DADO cualquier email de Google CUANDO se loguea por primera vez ENTONCES se crea user con `status = pending` y ve pantalla "esperando aprobación"
+- [ ] DADO un user `pending` CUANDO el admin lo aprueba ENTONCES su `status = approved` y puede acceder a la app
+- [ ] DADO un user `pending` o `rejected` CUANDO intenta acceder a `/` o cualquier ruta de la app ENTONCES recibe la pantalla de espera
+- [ ] DADO un jugador no-admin (cuyo email ≠ `ADMIN_EMAIL`) CUANDO accede a `/admin` ENTONCES recibe 403
 
 ### Pronósticos partidos
-- [ ] DADO un partido futuro CUANDO el jugador carga un score ENTONCES se persiste y puede editarlo
+- [ ] DADO un partido futuro CUANDO el jugador carga un score (0-15 cada lado) ENTONCES se persiste y puede editarlo
 - [ ] DADO un partido que ya empezó CUANDO el jugador intenta editar ENTONCES la API rechaza con 403 y la UI muestra "cerrado"
 - [ ] DADO un partido finalizado CUANDO el resultado es 2-1 y el jugador predijo 2-1 ENTONCES gana 3 pts
 - [ ] DADO un partido finalizado CUANDO el resultado es 2-1 y el jugador predijo 3-1 ENTONCES gana 1 pt
 - [ ] DADO un partido finalizado CUANDO el resultado es 2-1 y el jugador predijo 0-2 ENTONCES gana 0 pts
+- [ ] DADO un partido de KO que terminó 1-1 (90 min) y se definió por penales CUANDO el jugador predijo 1-1 ENTONCES gana 3 pts (penales no cuentan)
+- [ ] DADO un partido `postponed` CUANDO el admin setea nueva fecha ENTONCES se reabren pronósticos para los jugadores hasta el nuevo kickoff
+- [ ] DADO un partido `cancelled` CUANDO se recalcula la tabla ENTONCES no suma puntos a nadie
 
 ### Pronósticos especiales
-- [ ] DADO que el torneo no empezó CUANDO el jugador carga sus 6 picks especiales ENTONCES se guardan
-- [ ] DADO el kickoff del primer partido CUANDO el jugador intenta editar especiales ENTONCES recibe error
-- [ ] DADO el torneo terminado CUANDO el campeón efectivo coincide con el pick del jugador ENTONCES gana 20 pts bonus
+- [ ] DADO que el torneo no empezó CUANDO el jugador carga sus 6 picks especiales (campeón/subcampeón/3ro/goleador/mejor jugador/país más goleador) ENTONCES se guardan
+- [ ] DADO el kickoff del primer partido del torneo CUANDO el jugador intenta editar especiales ENTONCES recibe error
+- [ ] DADO el torneo terminado y el admin resuelve los bonus CUANDO el campeón efectivo coincide con el pick del jugador ENTONCES gana 20 pts bonus
+- [ ] DADO el torneo terminado CUANDO se calcula automáticamente el país más goleador (sumando goles por selección) ENTONCES los picks acertados ganan 5 pts bonus
 
 ### Sync de resultados
 - [ ] DADO un partido en vivo CUANDO el cron corre cada 3 min ENTONCES actualiza el score parcial sin recalcular puntos
@@ -156,12 +182,15 @@ Aplicación web mobile-first para que un grupo cerrado de ~15 amigos haga su pro
 ### Pozo
 - [ ] DADO un jugador que pagó CUANDO el admin lo marca ENTONCES aparece "✓ pagó" en la tabla pública
 - [ ] DADO N jugadores pagos CUANDO el monto configurado es $X ENTONCES el pozo total = N × X visible en el header
-- [ ] DADO un admin CUANDO cambia el monto del pozo ENTONCES se persiste y se refleja en toda la app
+- [ ] DADO un admin antes del primer kickoff CUANDO cambia el monto del pozo ENTONCES se persiste y se refleja en toda la app
+- [ ] DADO el primer kickoff ya ocurrido CUANDO el admin intenta cambiar el monto ENTONCES recibe error "pozo lockeado"
+- [ ] DADO el torneo terminado con empate en 1er lugar entre 2 jugadores CUANDO se calcula el premio ENTONCES cada uno recibe 50% del pozo
 
 ### Notificaciones
 - [ ] DADO un partido a las 16:00 ART CUANDO son las 15:00 ART y un jugador no cargó pronóstico ENTONCES recibe un mail
 - [ ] DADO un jugador que ya cargó CUANDO falta 1h al partido ENTONCES NO recibe mail
-- [ ] DADO el fin de una fecha CUANDO se procesan todos los partidos ENTONCES se envía mail con resumen y tabla
+- [ ] DADO un jugador con opt-out activado CUANDO falta 1h y no cargó ENTONCES NO recibe mail
+- [ ] DADO el fin de una fecha CUANDO se procesan todos los partidos ENTONCES se envía mail con resumen y tabla (respetando opt-out)
 
 ### Vista pública post-kickoff
 - [ ] DADO un partido que ya empezó CUANDO un jugador entra al detalle ENTONCES ve los pronósticos de todos los demás
@@ -169,10 +198,12 @@ Aplicación web mobile-first para que un grupo cerrado de ~15 amigos haga su pro
 ### Tabla
 - [ ] DADO 3 partidos finalizados CUANDO entro a la tabla ENTONCES veo a los jugadores ordenados por puntos totales descendente
 - [ ] DADO empate en puntos CUANDO se ordena ENTONCES desempata por cantidad de resultados exactos, luego por signos acertados
+- [ ] DADO empate en puntos, exactos Y signos CUANDO se renderiza la tabla ENTONCES los jugadores comparten la misma posición visible (ej "1° (empate)")
 
 ## Próximos pasos
 
-1. `/speckit-clarify` para resolver ambigüedades de implementación
-2. `/speckit-plan` para diseño técnico (modelo de datos, rutas, componentes)
-3. `/speckit-tasks` para desglose en tareas accionables
-4. `/speckit-implement` para codear
+1. ~~`/speckit-clarify`~~ ✅ resuelto (ver [clarifications.md](./clarifications.md))
+2. `/speckit-constitution` para fijar convenciones técnicas del proyecto
+3. `/speckit-plan` para diseño técnico (modelo de datos, rutas, componentes)
+4. `/speckit-tasks` para desglose en tareas accionables
+5. `/speckit-implement` para codear
