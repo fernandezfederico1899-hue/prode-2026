@@ -203,7 +203,7 @@ Todos los bonus son **objetivos** (los define FIFA al final del torneo o se calc
 ## Próximos pasos
 
 1. ~~`/speckit-clarify`~~ ✅ resuelto (ver [clarifications.md](./clarifications.md))
-2. `/speckit-constitution` para fijar convenciones técnicas del proyecto
+2. ~~`/speckit-constitution`~~ ✅ resuelto (ver [constitution.md](./constitution.md))
 3. `/speckit-plan` para diseño técnico (modelo de datos, rutas, componentes)
 4. `/speckit-tasks` para desglose en tareas accionables
 5. `/speckit-implement` para codear
