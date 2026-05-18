@@ -305,16 +305,47 @@ Dado el deadline ajustado (3 semanas), pragmatismo:
 
 ---
 
-## 13. Definition of Done por feature
+## 13. Responsive / Mobile-first (requisito de primera línea)
+
+**No es opcional, no es un afterthought.** La mayoría de los jugadores van a entrar desde el celular.
+
+### Estándares no negociables
+- **Mobile-first:** estilos default = mobile. `sm: md: lg: xl:` para escalar arriba.
+- **Touch targets:** mínimo 44×44 px (Apple HIG). Si shadcn no llega, override.
+- **Sin `:hover` como único feedback:** todo lo clickeable se ve clickeable sin hover.
+- **Inputs numéricos:** `inputMode="numeric"` para que el teclado mobile sea numérico.
+- **Dropdowns largos:** Combobox de shadcn con search, NUNCA `<select>` nativo en mobile.
+- **Navegación adaptativa:** bottom tab bar en mobile (`hidden md:block`), top nav o sidebar en desktop.
+- **Tablas:** la tabla de posiciones NO hace scroll horizontal en mobile. Se rediseña como cards apiladas; en desktop, tabla tradicional.
+- **Modals:** Sheet (drawer desde abajo) en mobile, Dialog en desktop.
+- **Imágenes:** `next/image` siempre, con sizes correctos. Sin `<img>`.
+
+### Performance mobile
+- LCP objetivo: < 2.5s en 3G simulado.
+- Bundle JS inicial: < 100kb gzipped.
+- Sin animaciones gratuitas.
+
+### Test en cada feature
+- Mobile viewport (375×667 mínimo).
+- Desktop (1440×900).
+- Forms usables con teclado mobile.
+- Sin overflow horizontal.
+- Texto legible sin zoom (≥ 14px en mobile).
+
+---
+
+## 14. Definition of Done por feature
 
 Una feature está hecha cuando:
 1. ✅ Cumple los criterios de aceptación de la spec
 2. ✅ Pasa `pnpm typecheck` sin errores
 3. ✅ Pasa `pnpm lint`
 4. ✅ Tests relevantes verdes (según matriz de la sección 8)
-5. ✅ Probada manualmente en mobile viewport (DevTools) y desktop
-6. ✅ Mergeada a `main` vía PR
-7. ✅ Visible en preview de Vercel
+5. ✅ **Probada en mobile real (no solo DevTools)** abriendo el preview de Vercel desde tu celular
+6. ✅ Probada en desktop
+7. ✅ Sin overflow horizontal, touch targets OK, teclado mobile correcto
+8. ✅ Mergeada a `main` vía PR
+9. ✅ Visible en preview de Vercel
 
 ---
 

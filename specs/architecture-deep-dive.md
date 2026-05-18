@@ -354,11 +354,113 @@ Toda lógica que dependa de "ya arrancó" usa ese helper. Nada de inferir de otr
 
 ---
 
+## 11. Modelo de equipos y jugadores
+
+### Decisiones tomadas
+
+**Tabla `teams`** con identidad canónica:
+```ts
+teams: {
+  id: uuid PK,
+  fifa_code: text UNIQUE,    // 'ARG', 'BRA', 'USA' (ISO 3166-1 alpha-3)
+  name: text,                // 'Argentina'
+  flag_emoji: text,          // 🇦🇷
+  openfootball_name: text,
+  api_sports_id: integer UNIQUE,
+}
+
+matches: {
+  // ...
+  home_team_id: uuid FK teams(id),
+  away_team_id: uuid FK teams(id),
+}
+```
+
+Esto habilita:
+- Bonus "país más goleador" → query agregada por `team_id`
+- Display consistente con banderita
+- Mapping bilateral openfootball ↔ API-Sports sin string matching frágil
+
+**Tabla `players`** (precargada en seed):
+```ts
+players: {
+  id: uuid PK,
+  api_sports_player_id: integer UNIQUE,
+  name: text,                // 'Lionel Messi'
+  team_id: uuid FK teams(id),
+  position: text,
+}
+```
+
+Usada por pronósticos especiales (goleador, mejor jugador) con dropdown + buscador. Resolución al final del torneo = match exacto por `player_id`, sin ambigüedad de strings.
+
+### Resolución de bonus al final del torneo
+
+- **Auto según API + override manual.** Al disparar `/admin/bonus-resolution`, el sistema intenta autocompletar consultando API-Sports (ej `/players/topscorers` para goleador). El admin revisa, ajusta si es necesario, y submitea.
+- Para "campeón / subcampeón / 3er puesto": auto-detectado por estado final de los matches de KO (no requiere admin).
+- Para "mejor jugador": no hay API confiable, lo carga el admin a mano cuando FIFA anuncia.
+- Para "país más goleador": auto-computado por `SUM(goals) GROUP BY team_id`.
+
+---
+
+## 12. Responsive / Mobile-first
+
+Federico marcó esto como crítico. **No es un afterthought, es un requisito de primera línea.**
+
+### Estándares (no negociables)
+
+**Breakpoints (Tailwind):**
+- Mobile-first: estilos default = mobile (< 640px)
+- `sm:` (≥ 640px) = tablet portrait
+- `md:` (≥ 768px) = tablet landscape
+- `lg:` (≥ 1024px) = desktop
+- `xl:` (≥ 1280px) = wide desktop
+
+**Touch targets:**
+- Cualquier elemento interactivo: **mínimo 44×44 px** (Apple HIG) o 48×48 px (Material). Si shadcn no llega, override con `min-h-12 min-w-12`.
+- Sin `:hover` como único feedback de interactividad. Todo lo clickeable se debe ver clickeable sin hover.
+
+**Inputs:**
+- Score: `inputMode="numeric"` + `pattern="[0-9]*"` para que el teclado móvil sea numérico.
+- Dropdowns largos (jugadores, equipos): usar Combobox de shadcn con search, NO `<select>` nativo en mobile (es horrible).
+
+**Layout patterns:**
+- **Mobile:** navegación inferior (bottom tab bar) con 3-4 íconos (Pronósticos, Tabla, Partidos, Perfil).
+- **Desktop:** sidebar lateral o top nav. Usamos `hidden md:block` / `block md:hidden` para alternar.
+- **Tablas en mobile:** la tabla de posiciones NO se hace scroll horizontal. Se rediseña como cards apiladas en mobile, tabla tradicional en desktop. Es trabajo extra pero es lo correcto.
+- **Modals:** en mobile, usar Sheet (drawer desde abajo). En desktop, Dialog clásico. shadcn permite ambos con la misma API.
+
+**Imágenes:**
+- Avatares y banderas: `next/image` siempre. Sin `<img>` raw.
+- Lazy loading por default.
+- Sizes correctos: el avatar de 32px en mobile no debe descargar el original de 400px.
+
+**Performance mobile:**
+- LCP objetivo: < 2.5s en 3G simulado.
+- Bundle JS inicial: < 100kb gzipped. Cache Components ayuda aquí (la mayoría del UI es server-rendered).
+- Sin animaciones gratuitas. Si hay transition, debe tener un propósito.
+
+### Testing responsive
+
+Parte del Definition of Done de cada feature:
+1. ✅ Probada en mobile viewport (375×667, iPhone SE).
+2. ✅ Probada en desktop (1440×900).
+3. ✅ Probada en tablet (768×1024, opcional pero recomendado).
+4. ✅ Texto legible sin zoom (mínimo 14px en mobile).
+5. ✅ Sin overflow horizontal (scrollbar horizontal indeseado = bug).
+6. ✅ Forms usables con teclado mobile (numérico para scores).
+
+### Tooling
+- Chrome DevTools device emulation para validación rápida.
+- Antes de mergear cada feature: smoke test en celular real (lo abrís en tu Android desde el preview de Vercel).
+
+---
+
 ## Resumen de decisiones
 
 | # | Tema | Decisión |
 |---|---|---|
-| 1 | Storage de puntos | Híbrido: derivado por función pura + materializado en `predictions.points` |
+| 1 | Storage de puntos | Híbrido: función pura + materializado en `predictions.points` |
 | 2 | Identidad de partido | Columnas en `matches`: `openfootball_match_id`, `api_sports_fixture_id` |
 | 3 | State machine | Enum + transiciones validadas en código |
 | 4 | Recompute | Inline en transacción + comando `recalculateAll` |
@@ -368,6 +470,8 @@ Toda lógica que dependa de "ya arrancó" usa ese helper. Nada de inferir de otr
 | 8 | Cache | Cache Components con tags + `updateTag` post-mutation |
 | 9 | Mail idempotency | Tabla `sent_notifications` con unique constraint |
 | 10 | "Tournament started" | `tournament_config.tournament_starts_at` como única fuente |
+| 11 | Teams + players | Tablas canónicas con FKs en matches/predictions |
+| 12 | Responsive | Requisito de primera línea: mobile-first, touch targets 44px, navegación adaptativa, tablas → cards en mobile |
 
 ---
 
