@@ -204,6 +204,9 @@ Todos los bonus son **objetivos** (los define FIFA al final del torneo o se calc
 
 1. ~~`/speckit-clarify`~~ ✅ resuelto (ver [clarifications.md](./clarifications.md))
 2. ~~`/speckit-constitution`~~ ✅ resuelto (ver [constitution.md](./constitution.md))
-3. `/speckit-plan` para diseño técnico (modelo de datos, rutas, componentes)
-4. `/speckit-tasks` para desglose en tareas accionables
-5. `/speckit-implement` para codear
+3. ~~Architecture deep dive~~ ✅ resuelto (ver [architecture-deep-dive.md](./architecture-deep-dive.md))
+4. ~~Visual design~~ ✅ resuelto (ver [visual-design.md](./visual-design.md))
+5. `/speckit-plan` para diseño técnico (modelo de datos, rutas, componentes, orden de implementación)
+6. Mockups de pantallas clave antes de codear (Home, Pronósticos, Tabla, Match detail, Admin)
+7. `/speckit-tasks` para desglose en tareas accionables
+8. `/speckit-implement` para codear
