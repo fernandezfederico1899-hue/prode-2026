@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   PRODE 2026 — RETRO MUNDIALERO (Panini-inspired)
+   ============================================================ */
+
+@theme {
+  /* Fonts (linked in layout.tsx via next/font) */
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-bebas), Impact, "Arial Narrow", sans-serif;
+}
+
+@theme inline {
+  /* Semantic color tokens — used as bg-background, text-foreground, etc. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  /* Status colors for predictions */
+  --color-correct-exact: var(--correct-exact);
+  --color-correct-sign: var(--correct-sign);
+  --color-wrong: var(--wrong);
+  --color-pending: var(--pending);
+  --color-live: var(--live);
+}
+
+:root {
+  /* LIGHT MODE — crema/parchment con rojo Panini + azul marino + dorado */
+  --background: hsl(38 33% 96%);
+  --foreground: hsl(220 30% 12%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(220 30% 12%);
+  --muted: hsl(38 20% 88%);
+  --muted-foreground: hsl(220 15% 40%);
+  --primary: hsl(355 78% 42%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(220 50% 22%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --accent: hsl(43 70% 52%);
+  --accent-foreground: hsl(220 30% 12%);
+  --destructive: hsl(0 70% 45%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(220 20% 80%);
+  --ring: hsl(355 78% 42%);
+
+  /* Prediction status */
+  --correct-exact: hsl(43 70% 52%);   /* dorado foil */
+  --correct-sign: hsl(140 50% 40%);   /* verde */
+  --wrong: hsl(0 60% 45%);            /* rojo apagado */
+  --pending: hsl(220 10% 55%);        /* gris */
+  --live: hsl(0 90% 50%);             /* rojo vivo */
+}
+
+.dark {
+  /* DARK MODE — azul marino noche + acentos más brillantes */
+  --background: hsl(220 35% 8%);
+  --foreground: hsl(38 30% 92%);
+  --card: hsl(220 30% 13%);
+  --card-foreground: hsl(38 30% 92%);
+  --muted: hsl(220 25% 18%);
+  --muted-foreground: hsl(220 10% 65%);
+  --primary: hsl(355 65% 55%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(220 40% 30%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --accent: hsl(43 80% 60%);
+  --accent-foreground: hsl(220 30% 12%);
+  --destructive: hsl(0 60% 55%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(220 20% 25%);
+  --ring: hsl(355 65% 55%);
+
+  --correct-exact: hsl(43 80% 60%);
+  --correct-sign: hsl(140 50% 55%);
+  --wrong: hsl(0 60% 55%);
+  --pending: hsl(220 10% 60%);
+  --live: hsl(0 90% 55%);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  /* Tabular numbers globally on tables and scores */
+  table, .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================
+   Patrón sutil Panini (líneas diagonales muy tenues)
+   ============================================================ */
+.panini-pattern {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 12px,
+    color-mix(in srgb, var(--muted-foreground) 6%, transparent) 12px,
+    color-mix(in srgb, var(--muted-foreground) 6%, transparent) 13px
+  );
+}
+
+.panini-pattern-strong {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 16px,
+    color-mix(in srgb, var(--primary) 12%, transparent) 16px,
+    color-mix(in srgb, var(--primary) 12%, transparent) 18px
+  );
+}
+
+/* ============================================================
+   Animaciones
+   ============================================================ */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.animate-live-pulse {
+  animation: live-pulse 1.2s ease-in-out infinite;
+}
