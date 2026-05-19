@@ -14,7 +14,9 @@
     "db:studio": "drizzle-kit studio",
     "db:check": "drizzle-kit check",
     "db:seed": "tsx --env-file=.env.local src/db/seed.ts",
-    "db:seed-players": "tsx --env-file=.env.local src/db/seed-players.ts"
+    "db:seed-ko": "node --env-file=.env.local scripts/seed-ko-matches.mjs",
+    "rosters:map": "node --env-file=.env.local scripts/map-team-ids.mjs",
+    "qstash:setup": "node --env-file=.env.local scripts/setup-qstash-cron.mjs"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

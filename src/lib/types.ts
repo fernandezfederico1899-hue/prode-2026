@@ -1,9 +1,5 @@
-/**
- * Tipos canónicos del dominio. Tanto los queries de DB como los mocks viejos
- * (que en M1.3 vamos desmontando) producen valores con esta forma.
- *
- * En el futuro mock-data.ts desaparece y todo viene de queries.
- */
+// Re-exports canónicos del dominio para que el código no dependa directo de
+// drizzle/schema.
 import type {
   Match as DbMatch,
   Player as DbPlayer,

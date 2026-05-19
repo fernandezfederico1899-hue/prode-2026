@@ -1,12 +1,14 @@
 import "server-only";
 import { sql, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { predictions, users } from "@/db/schema";
+import { predictions, specialPredictions, users } from "@/db/schema";
 
 export type LeaderboardEntry = {
   userId: string;
   name: string;
   image: string | null;
+  matchPoints: number;
+  bonusPoints: number;
   totalPoints: number;
   exactCount: number;
   signCount: number;
@@ -31,39 +33,47 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
       userId: users.id,
       name: users.name,
       image: users.image,
-      totalPoints: sql<number>`coalesce(sum(${predictions.points}), 0)::int`,
+      matchPoints: sql<number>`coalesce(sum(${predictions.points}), 0)::int`,
+      bonusPoints: sql<number>`coalesce(max(${specialPredictions.bonusPoints}), 0)::int`,
       exactCount: sql<number>`count(*) filter (where ${predictions.points} = 3)::int`,
       signCount: sql<number>`count(*) filter (where ${predictions.points} = 1)::int`,
       wrongCount: sql<number>`count(*) filter (where ${predictions.points} = 0)::int`,
     })
     .from(users)
     .leftJoin(predictions, eq(predictions.userId, users.id))
+    .leftJoin(
+      specialPredictions,
+      eq(specialPredictions.userId, users.id),
+    )
     .where(eq(users.status, "approved"))
-    .groupBy(users.id, users.name, users.image)
-    .orderBy(
-      sql`coalesce(sum(${predictions.points}), 0) desc`,
-      sql`count(*) filter (where ${predictions.points} = 3) desc`,
-      sql`count(*) filter (where ${predictions.points} = 1) desc`,
-    );
+    .groupBy(users.id, users.name, users.image);
 
-  // Calcular ranks con empates compartidos
+  // Calcular total y ordenar.
+  const withTotal = rows.map((r) => ({
+    ...r,
+    totalPoints: r.matchPoints + r.bonusPoints,
+  }));
+  withTotal.sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    if (b.exactCount !== a.exactCount) return b.exactCount - a.exactCount;
+    return b.signCount - a.signCount;
+  });
+
+  // Calcular ranks con empates compartidos.
   let rank = 0;
   let lastSig: string | null = null;
-  let pendingTied = 0;
-
-  const withRank: LeaderboardEntry[] = rows.map((r, i) => {
+  const withRank: LeaderboardEntry[] = withTotal.map((r, i) => {
     const sig = `${r.totalPoints}-${r.exactCount}-${r.signCount}`;
     if (sig !== lastSig) {
       rank = i + 1;
-      pendingTied = 0;
-    } else {
-      pendingTied++;
     }
     lastSig = sig;
     return {
       userId: r.userId,
       name: r.name,
       image: r.image,
+      matchPoints: r.matchPoints,
+      bonusPoints: r.bonusPoints,
       totalPoints: r.totalPoints,
       exactCount: r.exactCount,
       signCount: r.signCount,

@@ -4,6 +4,8 @@ import {
   Coins,
   ScrollText,
   Settings,
+  Shirt,
+  Trophy,
   Users,
 } from "lucide-react";
 import { getUsersByStatus, getApprovedCount } from "@/server/queries/users";
@@ -31,11 +33,33 @@ export default async function AdminDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 space-y-6">
-      <header>
-        <h1 className="font-display text-4xl md:text-5xl">DASHBOARD</h1>
-        <p className="text-muted-foreground mt-1">
-          Resumen del prode. Click en cada card para entrar a la sección.
-        </p>
+      <header className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-display text-4xl md:text-5xl">DASHBOARD</h1>
+          <p className="text-muted-foreground mt-1">
+            Resumen del prode. Click en cada card para entrar a la sección.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/rosters"
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary hover:underline border-2 border-primary/30 rounded-md px-3 py-1.5"
+          >
+            <Shirt className="w-3.5 h-3.5" /> Rosters
+          </Link>
+          <Link
+            href="/admin/bracket"
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary hover:underline border-2 border-primary/30 rounded-md px-3 py-1.5"
+          >
+            <Trophy className="w-3.5 h-3.5" /> Bracket
+          </Link>
+          <Link
+            href="/admin/bonus"
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary hover:underline border-2 border-primary/30 rounded-md px-3 py-1.5"
+          >
+            <Coins className="w-3.5 h-3.5" /> Bonus
+          </Link>
+        </div>
       </header>
 
       <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
