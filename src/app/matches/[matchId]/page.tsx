@@ -2,11 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  matches,
-  allPredictionsForMatch,
-  currentUser,
-} from "@/lib/mock-data";
+import { getMatchByIdWithTeams } from "@/server/queries/matches";
+import { auth } from "@/lib/auth";
 import { TeamLabel } from "@/components/common/team-label";
 import { StatusBadge } from "@/components/common/status-badge";
 
@@ -25,13 +22,23 @@ export default async function MatchDetailPage({
   params: Promise<{ matchId: string }>;
 }) {
   const { matchId } = await params;
-  const match = matches.find((m) => m.id === matchId);
+  const match = await getMatchByIdWithTeams(matchId);
   if (!match) notFound();
+
+  const session = await auth();
+  const currentUserId = session?.user?.id ?? "";
 
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
   const showOthers = isLive || isFinished;
-  const otherPreds = allPredictionsForMatch[match.id] ?? [];
+  // Pronósticos de todos vendrán de queries cuando wiring de predictions exista.
+  type PredWithUser = {
+    id: string;
+    homeScore: number;
+    awayScore: number;
+    user: { id: string; name: string };
+  };
+  const otherPreds: PredWithUser[] = [];
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">
@@ -109,7 +116,7 @@ export default async function MatchDetailPage({
           <h2 className="font-display text-2xl mb-4">PRONÓSTICOS</h2>
           <div className="grid gap-2 md:grid-cols-2">
             {otherPreds.map((p) => {
-              const isCurrent = p.user.id === currentUser.id;
+              const isCurrent = p.user.id === currentUserId;
               const isExact =
                 isFinished &&
                 p.homeScore === match.homeScore &&

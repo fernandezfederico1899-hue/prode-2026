@@ -1,12 +1,11 @@
-import { matches, userPredictions } from "@/lib/mock-data";
+import { getAllMatchesWithTeams } from "@/server/queries/matches";
 import type { MatchWithTeams } from "@/lib/types";
 import { MatchCard } from "@/components/match/match-card";
 import { EditableMatchCard } from "@/components/match/editable-match-card";
 import { StatusBadge } from "@/components/common/status-badge";
 
-// Render-time: este componente se re-evalúa cada request. Para producción
-// vamos a usar Cache Components con cacheLife invalidando a las 00:00 ART
-// (mock no necesita, ya es dinámico).
+// Render-time. Para producción usamos Cache Components con cacheLife
+// invalidando a las 00:00 ART para refrescar "hoy" automáticamente.
 export const dynamic = "force-dynamic";
 
 const DATE_KEY_FORMAT = new Intl.DateTimeFormat("es-AR", {
@@ -35,7 +34,11 @@ function isToday(key: string) {
   return key === formatDateKey(new Date());
 }
 
-export default function AgendaPage() {
+export default async function AgendaPage() {
+  const matches = await getAllMatchesWithTeams();
+  // userPredictions vendrá de queries en próxima iteración.
+  const userPredictions: Record<string, never> = {};
+
   // Agrupar partidos por fecha ART
   const byDate = new Map<string, { date: Date; matches: MatchWithTeams[] }>();
 

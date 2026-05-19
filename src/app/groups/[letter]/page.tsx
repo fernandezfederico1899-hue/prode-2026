@@ -1,11 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import {
-  groupStandings,
-  matches,
-  userPredictions,
-} from "@/lib/mock-data";
+import { groupStandings } from "@/lib/mock-data";
+import { getMatchesByGroupWithTeams } from "@/server/queries/matches";
 import { GroupCard } from "@/components/groups/group-card";
 import { MatchCard } from "@/components/match/match-card";
 import { EditableMatchCard } from "@/components/match/editable-match-card";
@@ -20,9 +17,9 @@ export default async function GroupDetailPage({
   const standings = groupStandings[upperLetter];
   if (!standings) notFound();
 
-  const groupMatches = matches
-    .filter((m) => m.groupLetter === upperLetter)
-    .sort((a, b) => a.kickoffAt.getTime() - b.kickoffAt.getTime());
+  const groupMatches = await getMatchesByGroupWithTeams(upperLetter);
+  // userPredictions vendrá de queries en próxima iteración.
+  const userPredictions: Record<string, never> = {};
 
   const live = groupMatches.filter((m) => m.status === "live");
   const finished = groupMatches.filter((m) => m.status === "finished");

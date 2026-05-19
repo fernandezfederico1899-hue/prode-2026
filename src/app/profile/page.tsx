@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { Shield, Sparkles } from "lucide-react";
-import { currentUser } from "@/lib/mock-data";
-import { TeamLabel } from "@/components/common/team-label";
+import { auth } from "@/lib/auth";
+import { getUserById } from "@/server/queries/users";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { SignOutButton } from "@/components/common/sign-out-button";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const session = await auth();
+  // Proxy ya garantiza que solo users approved llegan acá; defensivo igual.
+  const user = session?.user?.id ? await getUserById(session.user.id) : null;
+
+  const displayName = user?.name ?? session?.user?.name ?? "—";
+  const displayEmail = user?.email ?? session?.user?.email ?? "—";
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 md:py-10 space-y-6">
       <header>
@@ -13,18 +20,14 @@ export default function ProfilePage() {
       </header>
 
       <section className="rounded-xl border-2 border-border bg-card p-6 space-y-4">
-        <Field label="Nombre" value={currentUser.name} />
-        <Field label="Email" value="fernandezfederico1899@gmail.com" />
+        <Field label="Nombre" value={displayName} />
+        <Field label="Email" value={displayEmail} />
         <div>
           <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">
             Equipo favorito
           </span>
           <div className="mt-1">
-            {currentUser.favoriteTeam ? (
-              <TeamLabel team={currentUser.favoriteTeam} size="md" />
-            ) : (
-              <span className="text-muted-foreground">Sin elegir</span>
-            )}
+            <span className="text-muted-foreground">Sin elegir</span>
           </div>
         </div>
       </section>
@@ -92,10 +95,6 @@ export default function ProfilePage() {
       </Link>
 
       <SignOutButton />
-
-      <div className="text-xs text-center text-muted-foreground">
-        Mockup visual — sin DB ni auth real. Esto se conecta en M1.
-      </div>
     </div>
   );
 }
