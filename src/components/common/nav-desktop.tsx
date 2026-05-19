@@ -11,6 +11,7 @@ const items = [
   { href: "/groups", label: "Grupos" },
   { href: "/bracket", label: "Llave" },
   { href: "/agenda", label: "Agenda" },
+  { href: "/matches", label: "Partidos" },
   { href: "/leaderboard", label: "Tabla" },
   { href: "/profile", label: "Perfil" },
 ];
