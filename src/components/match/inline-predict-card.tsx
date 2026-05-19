@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Clock, Loader2, Lock, AlertCircle } from "lucide-react";
+import { Check, Clock, Loader2, Lock, AlertCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MatchWithTeams, Prediction } from "@/lib/types";
 import { TeamLabel } from "@/components/common/team-label";
-import { submitPredictionAction } from "@/server/actions/predictions";
+import {
+  deletePredictionAction,
+  submitPredictionAction,
+} from "@/server/actions/predictions";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -96,6 +99,31 @@ export function InlinePredictCard({
     tryAutoSave(home, v);
   };
 
+  const handleDelete = async () => {
+    if (locked || state === "saving") return;
+    if (!confirm("¿Borrar tu pronóstico de este partido?")) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    // Si nunca se guardó (no hay prediction inicial), solo limpiamos local.
+    const wasPersisted = lastSent.current !== "" || userPrediction !== undefined;
+    setHome("");
+    setAway("");
+    if (!wasPersisted) {
+      setState("idle");
+      setErrorMsg(null);
+      return;
+    }
+    setState("saving");
+    setErrorMsg(null);
+    const res = await deletePredictionAction({ matchId: match.id });
+    if (res.ok) {
+      lastSent.current = "";
+      setState("idle");
+    } else {
+      setState("error");
+      setErrorMsg(humanError(res.error));
+    }
+  };
+
   return (
     <article
       className={cn(
@@ -142,9 +170,22 @@ export function InlinePredictCard({
 
       <footer className="mt-4 pt-3 border-t border-border flex items-center justify-between gap-3 text-sm">
         <SaveIndicator state={state} locked={locked} error={errorMsg} />
-        <span className="text-xs text-muted-foreground tabular-nums">
-          +3 exacto · +1 signo
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground tabular-nums">
+            +3 exacto · +1 signo
+          </span>
+          {!locked && (home !== "" || away !== "") && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={state === "saving"}
+              title="Borrar pronóstico"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </footer>
     </article>
   );

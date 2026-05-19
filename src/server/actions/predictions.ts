@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { matches, predictions } from "@/db/schema";
@@ -62,6 +62,55 @@ export async function submitPredictionAction(
     });
 
   // Invalidamos las páginas que muestran predictions.
+  revalidatePath("/matches");
+  revalidatePath("/predict");
+  revalidatePath(`/matches/${matchId}`);
+  revalidatePath("/");
+
+  return { ok: true };
+}
+
+const deleteSchema = z.object({ matchId: z.string().uuid() });
+
+/**
+ * Borra el pronóstico del usuario logueado para un partido. Solo permitido
+ * antes del kickoff (misma regla que submit).
+ */
+export async function deletePredictionAction(
+  input: unknown,
+): Promise<SubmitResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, error: "unauthorized" };
+  if (session.user.status !== "approved") {
+    return { ok: false, error: "not_approved" };
+  }
+
+  const parsed = deleteSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid_input" };
+
+  const { matchId } = parsed.data;
+
+  const match = await db.query.matches.findFirst({
+    where: eq(matches.id, matchId),
+    columns: { kickoffAt: true, status: true },
+  });
+  if (!match) return { ok: false, error: "match_not_found" };
+  if (match.kickoffAt.getTime() <= Date.now()) {
+    return { ok: false, error: "match_locked" };
+  }
+  if (match.status !== "scheduled" && match.status !== "postponed") {
+    return { ok: false, error: "match_locked" };
+  }
+
+  await db
+    .delete(predictions)
+    .where(
+      and(
+        eq(predictions.userId, session.user.id),
+        eq(predictions.matchId, matchId),
+      ),
+    );
+
   revalidatePath("/matches");
   revalidatePath("/predict");
   revalidatePath(`/matches/${matchId}`);
