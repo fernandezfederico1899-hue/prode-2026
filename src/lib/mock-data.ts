@@ -515,10 +515,19 @@ export const apiSportsUsage = {
 };
 
 // ========== BRACKET (Eliminatoria) ==========
-// Mock del bracket post-fase de grupos.
-// En WC 2026 hay 5 fases: R32 → R16 → QF → SF + 3rd → Final.
-// Para el mockup arrancamos en R16 (Octavos) para que sea legible.
-export type BracketStage = "round_of_16" | "quarter" | "semi" | "third_place" | "final";
+// Mundial 2026 con 48 equipos tiene 5 fases eliminatorias:
+//   16avos (16 partidos / 32 equipos) → Octavos (8 / 16) → Cuartos (4 / 8)
+//   → Semis (2 / 4) → 3° + Final (1 + 1)
+// Total: 32 partidos KO.
+// El nombre en español va por la cantidad de PARTIDOS de la ronda (no equipos).
+// El enum interno usa convención inglesa (round_of_32 = 32 equipos = 16 partidos).
+export type BracketStage =
+  | "round_of_32"
+  | "round_of_16"
+  | "quarter"
+  | "semi"
+  | "third_place"
+  | "final";
 
 export type BracketMatch = {
   id: string;
@@ -565,31 +574,52 @@ const bMatch = (
 };
 
 export const bracket: BracketMatch[] = [
-  // OCTAVOS (8 partidos): primeros 4 ya jugados, otros 4 programados
+  // ========== 16AVOS (16 partidos / 32 equipos) ==========
+  // Primeros 8 ya jugados (con mis 16 teams mockeados). Los siguientes 8 con TBD.
+  bMatch("b-r32-1",  "round_of_32",  1, "ARG", "MAR", 2, 1, "finished", -240),
+  bMatch("b-r32-2",  "round_of_32",  2, "ENG", "SUI", 1, 0, "finished", -238),
+  bMatch("b-r32-3",  "round_of_32",  3, "BRA", "SEN", 3, 0, "finished", -236),
+  bMatch("b-r32-4",  "round_of_32",  4, "URU", "JPN", 2, 1, "finished", -234),
+  bMatch("b-r32-5",  "round_of_32",  5, "ESP", "MEX", 2, 0, "finished", -232),
+  bMatch("b-r32-6",  "round_of_32",  6, "NED", "COL", 3, 1, "finished", -230),
+  bMatch("b-r32-7",  "round_of_32",  7, "FRA", "USA", 2, 1, "finished", -228),
+  bMatch("b-r32-8",  "round_of_32",  8, "GER", "POR", 1, 0, "finished", -226),
+  bMatch("b-r32-9",  "round_of_32",  9, null, null, null, null, "scheduled", 8),
+  bMatch("b-r32-10", "round_of_32", 10, null, null, null, null, "scheduled", 10),
+  bMatch("b-r32-11", "round_of_32", 11, null, null, null, null, "scheduled", 12),
+  bMatch("b-r32-12", "round_of_32", 12, null, null, null, null, "scheduled", 14),
+  bMatch("b-r32-13", "round_of_32", 13, null, null, null, null, "scheduled", 16),
+  bMatch("b-r32-14", "round_of_32", 14, null, null, null, null, "scheduled", 18),
+  bMatch("b-r32-15", "round_of_32", 15, null, null, null, null, "scheduled", 20),
+  bMatch("b-r32-16", "round_of_32", 16, null, null, null, null, "scheduled", 22),
+
+  // ========== OCTAVOS (8 partidos) ==========
+  // R16-1 (ARG vs ENG) ya jugado. R16-2 a R16-4 con teams conocidos (ganadores
+  // de R32 finalizados). R16-5 a R16-8 todos TBD.
   bMatch("b-r16-1", "round_of_16", 1, "ARG", "ENG", 2, 1, "finished", -120),
-  bMatch("b-r16-2", "round_of_16", 2, "MEX", "NED", null, null, "scheduled", 24),
-  bMatch("b-r16-3", "round_of_16", 3, "BRA", "SUI", 3, 0, "finished", -118),
-  bMatch("b-r16-4", "round_of_16", 4, "POR", "SEN", null, null, "scheduled", 26),
-  bMatch("b-r16-5", "round_of_16", 5, "FRA", "COL", 1, 0, "finished", -116),
-  bMatch("b-r16-6", "round_of_16", 6, "GER", "MAR", null, null, "scheduled", 28),
-  bMatch("b-r16-7", "round_of_16", 7, "ESP", "JPN", 2, 1, "finished", -114),
-  bMatch("b-r16-8", "round_of_16", 8, "URU", "USA", null, null, "scheduled", 30),
+  bMatch("b-r16-2", "round_of_16", 2, "BRA", "URU", null, null, "scheduled", 36),
+  bMatch("b-r16-3", "round_of_16", 3, "ESP", "NED", null, null, "scheduled", 40),
+  bMatch("b-r16-4", "round_of_16", 4, "FRA", "GER", null, null, "scheduled", 44),
+  bMatch("b-r16-5", "round_of_16", 5, null, null, null, null, "scheduled", 48),
+  bMatch("b-r16-6", "round_of_16", 6, null, null, null, null, "scheduled", 52),
+  bMatch("b-r16-7", "round_of_16", 7, null, null, null, null, "scheduled", 56),
+  bMatch("b-r16-8", "round_of_16", 8, null, null, null, null, "scheduled", 60),
 
-  // CUARTOS (4 partidos): 2 jugados (de los ganadores de los R16 finalizados)
-  bMatch("b-qf-1", "quarter", 1, "ARG", null, null, null, "scheduled", 72),  // ARG vs ganador R16-2
-  bMatch("b-qf-2", "quarter", 2, "BRA", null, null, null, "scheduled", 76),  // BRA vs ganador R16-4
-  bMatch("b-qf-3", "quarter", 3, "FRA", null, null, null, "scheduled", 96),  // FRA vs ganador R16-6
-  bMatch("b-qf-4", "quarter", 4, "ESP", null, null, null, "scheduled", 100), // ESP vs ganador R16-8
+  // ========== CUARTOS (4 partidos) ==========
+  bMatch("b-qf-1", "quarter", 1, "ARG", null, null, null, "scheduled", 96),
+  bMatch("b-qf-2", "quarter", 2, null, null, null, null, "scheduled", 100),
+  bMatch("b-qf-3", "quarter", 3, null, null, null, null, "scheduled", 120),
+  bMatch("b-qf-4", "quarter", 4, null, null, null, null, "scheduled", 124),
 
-  // SEMIS (2 partidos): ambos pendientes
-  bMatch("b-sf-1", "semi", 1, null, null, null, null, "scheduled", 144),
-  bMatch("b-sf-2", "semi", 2, null, null, null, null, "scheduled", 148),
+  // ========== SEMIS (2 partidos) ==========
+  bMatch("b-sf-1", "semi", 1, null, null, null, null, "scheduled", 168),
+  bMatch("b-sf-2", "semi", 2, null, null, null, null, "scheduled", 172),
 
-  // 3ER PUESTO
-  bMatch("b-3rd", "third_place", 1, null, null, null, null, "scheduled", 192),
+  // ========== 3ER PUESTO ==========
+  bMatch("b-3rd", "third_place", 1, null, null, null, null, "scheduled", 216),
 
-  // FINAL
-  bMatch("b-final", "final", 1, null, null, null, null, "scheduled", 196),
+  // ========== FINAL ==========
+  bMatch("b-final", "final", 1, null, null, null, null, "scheduled", 220),
 ];
 
 // ========== TOURNAMENT CONFIG ==========
