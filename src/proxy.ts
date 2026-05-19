@@ -16,15 +16,24 @@ const PUBLIC_PREFIXES = ["/api/auth", "/_next", "/favicon", "/icon"];
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Rutas siempre públicas (login, callbacks, assets)
-  if (
-    PUBLIC_PATHS.includes(pathname) ||
-    PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
-  ) {
+  // Prefixes públicos (callbacks de auth, assets)
+  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
   const session = req.auth;
+
+  // Si ya está logueado y aprobado, sacarlo de /login (no tiene sentido verlo)
+  if (session?.user?.status === "approved" && pathname === "/login") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  // Resto de rutas públicas: dejar pasar
+  if (PUBLIC_PATHS.includes(pathname)) {
+    return NextResponse.next();
+  }
 
   // Sin sesión → al login
   if (!session?.user) {

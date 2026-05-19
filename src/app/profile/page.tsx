@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { LogOut, Shield, Sparkles } from "lucide-react";
+import { Shield, Sparkles } from "lucide-react";
 import { currentUser } from "@/lib/mock-data";
 import { TeamLabel } from "@/components/common/team-label";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { SignOutButton } from "@/components/common/sign-out-button";
 
 export default function ProfilePage() {
   return (
@@ -90,15 +91,7 @@ export default function ProfilePage() {
         </div>
       </Link>
 
-      <Link
-        href="/login"
-        className="block rounded-xl border-2 border-border bg-card p-4 hover:bg-muted transition-colors"
-      >
-        <div className="flex items-center gap-3 text-destructive">
-          <LogOut className="w-5 h-5" />
-          <span className="font-bold uppercase tracking-wide">Cerrar sesión</span>
-        </div>
-      </Link>
+      <SignOutButton />
 
       <div className="text-xs text-center text-muted-foreground">
         Mockup visual — sin DB ni auth real. Esto se conecta en M1.
