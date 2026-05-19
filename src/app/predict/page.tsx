@@ -26,11 +26,19 @@ export default function PredictPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 space-y-8">
-      <header>
-        <h1 className="font-display text-4xl md:text-5xl">MIS PRONÓSTICOS</h1>
-        <p className="text-muted-foreground mt-1">
-          Cargá tu pronóstico para cada partido antes del kickoff.
-        </p>
+      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="font-display text-4xl md:text-5xl">MIS PRONÓSTICOS</h1>
+          <p className="text-muted-foreground mt-1">
+            Cargá tu pronóstico para cada partido antes del kickoff.
+          </p>
+        </div>
+        <a
+          href="/specials"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border-2 border-accent bg-accent/10 text-accent font-bold uppercase tracking-wide text-sm hover:bg-accent/20 transition-colors self-start"
+        >
+          🏆 Especiales
+        </a>
       </header>
 
       {pending.length > 0 && (

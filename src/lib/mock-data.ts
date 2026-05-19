@@ -92,6 +92,41 @@ export const teams: Team[] = [
 
 const findTeam = (code: string) => teams.find((t) => t.fifaCode === code)!;
 
+// ========== PLAYERS ==========
+// Para pronósticos de goleador y mejor jugador.
+// En producción se precargan ~700 desde API-Sports.
+export type Player = {
+  id: string;
+  name: string;
+  teamId: string;
+  position: string;
+};
+
+export const players: Player[] = [
+  { id: "p-messi", name: "Lionel Messi", teamId: "t-arg", position: "DEL" },
+  { id: "p-lautaro", name: "Lautaro Martínez", teamId: "t-arg", position: "DEL" },
+  { id: "p-mbappe", name: "Kylian Mbappé", teamId: "t-fra", position: "DEL" },
+  { id: "p-vinicius", name: "Vinícius Júnior", teamId: "t-bra", position: "DEL" },
+  { id: "p-rodrygo", name: "Rodrygo", teamId: "t-bra", position: "DEL" },
+  { id: "p-haaland", name: "Erling Haaland", teamId: "t-ger", position: "DEL" },
+  { id: "p-musiala", name: "Jamal Musiala", teamId: "t-ger", position: "MED" },
+  { id: "p-bellingham", name: "Jude Bellingham", teamId: "t-eng", position: "MED" },
+  { id: "p-kane", name: "Harry Kane", teamId: "t-eng", position: "DEL" },
+  { id: "p-yamal", name: "Lamine Yamal", teamId: "t-esp", position: "DEL" },
+  { id: "p-pedri", name: "Pedri", teamId: "t-esp", position: "MED" },
+  { id: "p-ronaldo", name: "Cristiano Ronaldo", teamId: "t-por", position: "DEL" },
+  { id: "p-leao", name: "Rafael Leão", teamId: "t-por", position: "DEL" },
+  { id: "p-depay", name: "Memphis Depay", teamId: "t-ned", position: "DEL" },
+  { id: "p-kudus", name: "Mohammed Kudus", teamId: "t-mar", position: "DEL" }, // (Kudus es ghanés en realidad pero es mock)
+  { id: "p-lozano", name: "Hirving Lozano", teamId: "t-mex", position: "DEL" },
+  { id: "p-pulisic", name: "Christian Pulisic", teamId: "t-usa", position: "MED" },
+  { id: "p-mane", name: "Sadio Mané", teamId: "t-sen", position: "DEL" },
+  { id: "p-mitoma", name: "Kaoru Mitoma", teamId: "t-jpn", position: "DEL" },
+  { id: "p-james", name: "James Rodríguez", teamId: "t-col", position: "MED" },
+  { id: "p-ziyech", name: "Hakim Ziyech", teamId: "t-mar", position: "MED" },
+  { id: "p-suarez", name: "Luis Suárez", teamId: "t-uru", position: "DEL" },
+];
+
 // ========== USERS ==========
 export const users: User[] = [
   { id: "u-fede", name: "Federico", favoriteTeam: findTeam("ARG") },
@@ -378,6 +413,35 @@ export const groupStandings: Record<string, GroupStanding[]> = {
     stand("COL", 3, 0, 0, 3, 1, 5),
   ],
 };
+
+// ========== SPECIAL PREDICTIONS ==========
+// Pronósticos pre-torneo del current user. Se lockean al primer kickoff.
+export type SpecialPicks = {
+  championTeamId: string | null;
+  runnerUpTeamId: string | null;
+  thirdPlaceTeamId: string | null;
+  topScorerPlayerId: string | null;
+  bestPlayerId: string | null;
+  mostGoalsTeamId: string | null;
+};
+
+export const currentUserSpecialPicks: SpecialPicks = {
+  championTeamId: "t-arg",
+  runnerUpTeamId: "t-fra",
+  thirdPlaceTeamId: "t-bra",
+  topScorerPlayerId: "p-messi",
+  bestPlayerId: "p-yamal",
+  mostGoalsTeamId: "t-arg",
+};
+
+export const SPECIAL_BONUSES = {
+  champion: { label: "Campeón", points: 20 },
+  runnerUp: { label: "Subcampeón", points: 10 },
+  thirdPlace: { label: "Tercer puesto", points: 5 },
+  topScorer: { label: "Goleador (Bota de Oro)", points: 15 },
+  bestPlayer: { label: "Mejor jugador (Balón de Oro)", points: 10 },
+  mostGoals: { label: "País más goleador", points: 5 },
+} as const;
 
 // ========== TOURNAMENT CONFIG ==========
 export const tournamentConfig = {

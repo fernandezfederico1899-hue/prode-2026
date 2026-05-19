@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Coins, Users } from "lucide-react";
+import { ArrowRight, Coins, Trophy, Users } from "lucide-react";
 import {
   matches,
   leaderboard,
@@ -73,6 +73,26 @@ export default function Home() {
           />
         </div>
       </section>
+
+      {/* CTA Pronósticos Especiales */}
+      <Link
+        href="/specials"
+        className="block rounded-xl border-2 border-accent bg-gradient-to-r from-accent/15 to-accent/5 p-5 md:p-6 hover:shadow-md transition-all group"
+      >
+        <div className="flex items-center gap-4">
+          <Trophy className="w-10 h-10 md:w-12 md:h-12 text-accent shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h3 className="font-display text-xl md:text-2xl leading-tight">
+              PRONÓSTICOS ESPECIALES
+            </h3>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Campeón, goleador, mejor jugador y más. Hasta{" "}
+              <strong className="text-foreground">65 pts bonus</strong>.
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-accent group-hover:translate-x-0.5 transition-transform shrink-0" />
+        </div>
+      </Link>
 
       {/* Próximos partidos */}
       <section>
