@@ -1,13 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Lock } from "lucide-react";
-import {
-  teams,
-  players,
-  SPECIAL_BONUSES,
-  type SpecialPicks,
-} from "@/lib/mock-data";
+import { useState, useTransition } from "react";
+import { AlertCircle, Check, Lock } from "lucide-react";
+import type { Team } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -15,43 +10,56 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { submitSpecialPicksAction } from "@/server/actions/specials";
 
-const teamsSorted = [...teams].sort((a, b) => a.name.localeCompare(b.name));
-const playersSorted = [...players].sort((a, b) => a.name.localeCompare(b.name));
-
-type Field = {
-  key: keyof SpecialPicks;
-  label: string;
-  points: number;
-  options: "teams" | "players";
+type Picks = {
+  championTeamId: string | null;
+  runnerUpTeamId: string | null;
+  thirdPlaceTeamId: string | null;
+  mostGoalsTeamId: string | null;
 };
 
-const FIELDS: Field[] = [
-  { key: "championTeamId", label: SPECIAL_BONUSES.champion.label, points: SPECIAL_BONUSES.champion.points, options: "teams" },
-  { key: "runnerUpTeamId", label: SPECIAL_BONUSES.runnerUp.label, points: SPECIAL_BONUSES.runnerUp.points, options: "teams" },
-  { key: "thirdPlaceTeamId", label: SPECIAL_BONUSES.thirdPlace.label, points: SPECIAL_BONUSES.thirdPlace.points, options: "teams" },
-  { key: "topScorerPlayerId", label: SPECIAL_BONUSES.topScorer.label, points: SPECIAL_BONUSES.topScorer.points, options: "players" },
-  { key: "bestPlayerId", label: SPECIAL_BONUSES.bestPlayer.label, points: SPECIAL_BONUSES.bestPlayer.points, options: "players" },
-  { key: "mostGoalsTeamId", label: SPECIAL_BONUSES.mostGoals.label, points: SPECIAL_BONUSES.mostGoals.points, options: "teams" },
+const TEAM_FIELDS: Array<{
+  key: keyof Picks;
+  label: string;
+  points: number;
+}> = [
+  { key: "championTeamId", label: "Campeón", points: 20 },
+  { key: "runnerUpTeamId", label: "Subcampeón", points: 10 },
+  { key: "thirdPlaceTeamId", label: "Tercer puesto", points: 5 },
+  { key: "mostGoalsTeamId", label: "País más goleador", points: 5 },
 ];
 
 export function SpecialPicksForm({
+  teams,
   initialPicks,
   locked,
 }: {
-  initialPicks: SpecialPicks;
+  teams: Team[];
+  initialPicks: Picks;
   locked: boolean;
 }) {
-  const [picks, setPicks] = useState<SpecialPicks>(initialPicks);
+  const [picks, setPicks] = useState<Picks>(initialPicks);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const teamsSorted = [...teams].sort((a, b) => a.name.localeCompare(b.name));
+  const totalMax = TEAM_FIELDS.reduce((acc, f) => acc + f.points, 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setError(null);
+    startTransition(async () => {
+      const result = await submitSpecialPicksAction(picks);
+      if (!result.ok) {
+        setError(errorMessage(result.error));
+        return;
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    });
   };
-
-  const totalPossiblePoints = FIELDS.reduce((acc, f) => acc + f.points, 0);
 
   return (
     <form
@@ -59,17 +67,26 @@ export function SpecialPicksForm({
       className="rounded-xl border-2 border-border bg-card p-5 md:p-8 space-y-6"
     >
       <div className="grid gap-5">
-        {FIELDS.map((field) => (
+        {TEAM_FIELDS.map((field) => (
           <PickField
             key={field.key}
-            field={field}
+            label={field.label}
+            points={field.points}
             value={picks[field.key]}
             onChange={(v) =>
               setPicks((prev) => ({ ...prev, [field.key]: v }))
             }
-            disabled={locked}
+            disabled={locked || isPending}
+            options={teamsSorted}
           />
         ))}
+
+        {/* Goleador y mejor jugador: pendientes (necesitan tabla players seedeada) */}
+        <div className="rounded-md border-2 border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+          <strong>Goleador (+15)</strong> y <strong>Mejor jugador (+10)</strong>{" "}
+          se habilitan antes del kickoff cuando carguemos la lista oficial de
+          jugadores.
+        </div>
       </div>
 
       <div className="border-t border-border pt-6">
@@ -81,24 +98,33 @@ export function SpecialPicksForm({
         ) : (
           <>
             <div className="flex items-baseline justify-between mb-4 text-sm">
-              <span className="text-muted-foreground">Máximo posible:</span>
+              <span className="text-muted-foreground">Máximo disponible:</span>
               <span className="font-display text-2xl text-primary tabular-nums">
-                {totalPossiblePoints} pts
+                {totalMax} pts
               </span>
             </div>
             <button
               type="submit"
-              className="w-full py-4 bg-primary text-primary-foreground rounded-md font-display text-2xl tracking-wider hover:opacity-90 transition-opacity"
+              disabled={isPending}
+              className="w-full py-4 bg-primary text-primary-foreground rounded-md font-display text-2xl tracking-wider hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-wait"
             >
               {saved ? (
                 <span className="inline-flex items-center gap-2 justify-center">
                   <Check className="w-6 h-6" />
                   GUARDADO
                 </span>
+              ) : isPending ? (
+                "GUARDANDO..."
               ) : (
-                "GUARDAR PRONÓSTICOS ESPECIALES"
+                "GUARDAR PRONÓSTICOS"
               )}
             </button>
+            {error && (
+              <p className="mt-3 text-xs text-center text-destructive inline-flex items-center justify-center gap-1 w-full">
+                <AlertCircle className="w-3.5 h-3.5" />
+                {error}
+              </p>
+            )}
             <p className="text-xs text-center text-muted-foreground mt-3">
               Se cierran al kickoff del primer partido del Mundial.
             </p>
@@ -110,24 +136,28 @@ export function SpecialPicksForm({
 }
 
 function PickField({
-  field,
+  label,
+  points,
   value,
   onChange,
   disabled,
+  options,
 }: {
-  field: Field;
+  label: string;
+  points: number;
   value: string | null;
-  onChange: (id: string | null) => void;
+  onChange: (v: string | null) => void;
   disabled: boolean;
+  options: Team[];
 }) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-2">
         <label className="font-bold uppercase tracking-wide text-sm">
-          {field.label}
+          {label}
         </label>
         <span className="inline-flex items-center px-2 py-0.5 rounded-md border-2 border-accent bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider tabular-nums">
-          +{field.points} pts
+          +{points} pts
         </span>
       </div>
 
@@ -137,47 +167,42 @@ function PickField({
         disabled={disabled}
       >
         <SelectTrigger>
-          <SelectValue
-            placeholder={
-              field.options === "teams" ? "Elegí un equipo..." : "Elegí un jugador..."
-            }
-          />
+          <SelectValue placeholder="Elegí un equipo..." />
         </SelectTrigger>
         <SelectContent>
-          {field.options === "teams"
-            ? teamsSorted.map((t) => (
-                <SelectItem key={t.id} value={t.id}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://flagcdn.com/${t.flagCode}.svg`}
-                    alt=""
-                    className="w-5 h-[15px] rounded-sm border border-border object-cover"
-                  />
-                  <span>{t.name}</span>
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    Grupo {t.groupLetter}
-                  </span>
-                </SelectItem>
-              ))
-            : playersSorted.map((p) => {
-                const team = teams.find((t) => t.id === p.teamId)!;
-                return (
-                  <SelectItem key={p.id} value={p.id}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`https://flagcdn.com/${team.flagCode}.svg`}
-                      alt=""
-                      className="w-5 h-[15px] rounded-sm border border-border object-cover"
-                    />
-                    <span className="font-semibold">{p.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {team.fifaCode} · {p.position}
-                    </span>
-                  </SelectItem>
-                );
-              })}
+          {options.map((t) => (
+            <SelectItem key={t.id} value={t.id}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://flagcdn.com/${t.flagCode}.svg`}
+                alt=""
+                className="w-5 h-[15px] rounded-sm border border-border object-cover"
+              />
+              <span>{t.name}</span>
+              {t.groupLetter && (
+                <span className="ml-auto text-xs text-muted-foreground">
+                  Grupo {t.groupLetter}
+                </span>
+              )}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
   );
+}
+
+function errorMessage(code: string): string {
+  switch (code) {
+    case "unauthorized":
+      return "Tenés que iniciar sesión.";
+    case "not_approved":
+      return "Tu cuenta no está aprobada.";
+    case "invalid_input":
+      return "Faltan campos o son inválidos.";
+    case "tournament_started":
+      return "El Mundial ya empezó, no se puede modificar.";
+    default:
+      return "No pudimos guardar. Probá de nuevo.";
+  }
 }

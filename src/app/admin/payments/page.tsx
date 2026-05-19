@@ -1,10 +1,17 @@
-import { Check, Coins, X } from "lucide-react";
-import { leaderboard, tournamentConfig } from "@/lib/mock-data";
+import { Check, X } from "lucide-react";
+import { getAllPayments } from "@/server/queries/admin";
+import { getTournamentConfig } from "@/server/queries/tournament-config";
+import { PaymentToggle } from "@/components/admin/payment-toggle";
 
-export default function AdminPaymentsPage() {
-  const paid = leaderboard.filter((r) => r.hasPaid);
-  const unpaid = leaderboard.filter((r) => !r.hasPaid);
-  const pozoTotal = paid.length * tournamentConfig.pozoAmountArs;
+export default async function AdminPaymentsPage() {
+  const [rows, config] = await Promise.all([
+    getAllPayments(),
+    getTournamentConfig(),
+  ]);
+  const pozoArs = config?.pozoAmountArs ?? 0;
+  const paidCount = rows.filter((r) => r.paid).length;
+  const unpaidCount = rows.length - paidCount;
+  const pozoTotal = paidCount * pozoArs;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-10 space-y-6">
@@ -16,17 +23,12 @@ export default function AdminPaymentsPage() {
         </p>
       </header>
 
-      {/* Resumen */}
       <div className="grid grid-cols-3 gap-3">
-        <Stat
-          label="Pagaron"
-          value={paid.length}
-          accent="success"
-        />
+        <Stat label="Pagaron" value={paidCount} accent="success" />
         <Stat
           label="Adeudan"
-          value={unpaid.length}
-          accent={unpaid.length > 0 ? "danger" : "neutral"}
+          value={unpaidCount}
+          accent={unpaidCount > 0 ? "danger" : "neutral"}
         />
         <Stat
           label="Pozo total"
@@ -35,65 +37,62 @@ export default function AdminPaymentsPage() {
         />
       </div>
 
-      {/* Lista */}
-      <section className="rounded-lg border-2 border-border bg-card overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
-            <tr>
-              <th className="text-left px-4 py-2.5">Jugador</th>
-              <th className="text-right px-4 py-2.5 w-24">Monto</th>
-              <th className="text-center px-4 py-2.5 w-24">Estado</th>
-              <th className="text-center px-4 py-2.5 w-32">Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboard.map((r, i) => (
-              <tr
-                key={r.user.id}
-                className={`border-t border-border ${i % 2 === 1 ? "bg-muted/20" : ""}`}
-              >
-                <td className="px-4 py-3 font-bold uppercase tracking-wide">
-                  {r.user.name}
-                </td>
-                <td className="px-4 py-3 text-right text-sm tabular-nums text-muted-foreground">
-                  ${tournamentConfig.pozoAmountArs.toLocaleString("es-AR")}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {r.hasPaid ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[color:var(--correct-sign)]/15 text-[color:var(--correct-sign)] text-[10px] font-bold uppercase tracking-wider">
-                      <Check className="w-3 h-3" />
-                      Pagó
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-destructive/15 text-destructive text-[10px] font-bold uppercase tracking-wider">
-                      <X className="w-3 h-3" />
-                      Debe
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {r.hasPaid ? (
-                    <button
-                      type="button"
-                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-destructive"
-                    >
-                      Revertir
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-[color:var(--correct-sign)] text-white text-xs font-bold uppercase tracking-wider hover:opacity-90"
-                    >
-                      <Check className="w-3 h-3" />
-                      Marcar
-                    </button>
-                  )}
-                </td>
+      {rows.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          Todavía no hay jugadores aprobados.
+        </div>
+      ) : (
+        <section className="rounded-lg border-2 border-border bg-card overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+              <tr>
+                <th className="text-left px-4 py-2.5">Jugador</th>
+                <th className="text-right px-4 py-2.5 w-24">Monto</th>
+                <th className="text-center px-4 py-2.5 w-24">Estado</th>
+                <th className="text-center px-4 py-2.5 w-32">Acción</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr
+                  key={r.userId}
+                  className={`border-t border-border ${
+                    i % 2 === 1 ? "bg-muted/20" : ""
+                  }`}
+                >
+                  <td className="px-4 py-3">
+                    <div className="font-bold uppercase tracking-wide">
+                      {r.userName}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {r.userEmail}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right text-sm tabular-nums text-muted-foreground">
+                    ${pozoArs.toLocaleString("es-AR")}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {r.paid ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[color:var(--correct-sign)]/15 text-[color:var(--correct-sign)] text-[10px] font-bold uppercase tracking-wider">
+                        <Check className="w-3 h-3" />
+                        Pagó
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-destructive/15 text-destructive text-[10px] font-bold uppercase tracking-wider">
+                        <X className="w-3 h-3" />
+                        Debe
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <PaymentToggle userId={r.userId} paid={r.paid} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
     </div>
   );
 }

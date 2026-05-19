@@ -1,7 +1,8 @@
-import { groupStandings } from "@/lib/mock-data";
+import { getGroupStandings } from "@/server/queries/standings";
 import { GroupCard } from "@/components/groups/group-card";
 
-export default function GroupsPage() {
+export default async function GroupsPage() {
+  const groupStandings = await getGroupStandings();
   const letters = Object.keys(groupStandings).sort();
 
   return (
@@ -9,21 +10,27 @@ export default function GroupsPage() {
       <header>
         <h1 className="font-display text-4xl md:text-5xl">FASE DE GRUPOS</h1>
         <p className="text-muted-foreground mt-1">
-          Posiciones en cada grupo. Los <strong>2 primeros</strong> de cada
-          grupo + mejores terceros pasan a la fase eliminatoria.
+          12 grupos de 4 equipos. Los <strong>2 primeros</strong> de cada grupo
+          + los 8 mejores terceros pasan a 16avos de final.
         </p>
       </header>
 
-      <div className="grid gap-4 md:gap-6 md:grid-cols-2">
-        {letters.map((letter) => (
-          <GroupCard
-            key={letter}
-            letter={letter}
-            standings={groupStandings[letter]}
-            href={`/groups/${letter.toLowerCase()}`}
-          />
-        ))}
-      </div>
+      {letters.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          Todavía no hay grupos cargados.
+        </div>
+      ) : (
+        <div className="grid gap-4 md:gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {letters.map((letter) => (
+            <GroupCard
+              key={letter}
+              letter={letter}
+              standings={groupStandings[letter]}
+              href={`/groups/${letter.toLowerCase()}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

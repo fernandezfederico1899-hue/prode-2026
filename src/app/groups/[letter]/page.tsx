@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { groupStandings } from "@/lib/mock-data";
+import { auth } from "@/lib/auth";
+import { getGroupStandings } from "@/server/queries/standings";
 import { getMatchesByGroupWithTeams } from "@/server/queries/matches";
+import { getUserPredictionsByMatch } from "@/server/queries/predictions";
+import type { Prediction } from "@/lib/types";
 import { GroupCard } from "@/components/groups/group-card";
 import { MatchCard } from "@/components/match/match-card";
 import { EditableMatchCard } from "@/components/match/editable-match-card";
@@ -14,12 +17,18 @@ export default async function GroupDetailPage({
 }) {
   const { letter } = await params;
   const upperLetter = letter.toUpperCase();
-  const standings = groupStandings[upperLetter];
-  if (!standings) notFound();
+  const session = await auth();
+  const userId = session?.user?.id ?? "";
 
-  const groupMatches = await getMatchesByGroupWithTeams(upperLetter);
-  // userPredictions vendrá de queries en próxima iteración.
-  const userPredictions: Record<string, never> = {};
+  const [allStandings, groupMatches, userPredictions] = await Promise.all([
+    getGroupStandings(),
+    getMatchesByGroupWithTeams(upperLetter),
+    userId
+      ? getUserPredictionsByMatch(userId)
+      : Promise.resolve({} as Record<string, Prediction>),
+  ]);
+  const standings = allStandings[upperLetter];
+  if (!standings || standings.length === 0) notFound();
 
   const live = groupMatches.filter((m) => m.status === "live");
   const finished = groupMatches.filter((m) => m.status === "finished");

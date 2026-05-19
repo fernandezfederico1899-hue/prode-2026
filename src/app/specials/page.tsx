@@ -1,10 +1,25 @@
 import { Trophy } from "lucide-react";
-import { currentUserSpecialPicks, tournamentConfig } from "@/lib/mock-data";
+import { auth } from "@/lib/auth";
+import { getAllTeams } from "@/server/queries/teams";
+import { getTournamentConfig } from "@/server/queries/tournament-config";
+import { getUserSpecialPicks } from "@/server/queries/specials";
 import { SpecialPicksForm } from "@/components/specials/special-picks-form";
 
-export default function SpecialsPage() {
-  const now = new Date();
-  const locked = tournamentConfig.tournamentStartsAt.getTime() < now.getTime();
+export default async function SpecialsPage() {
+  const session = await auth();
+  const userId = session?.user?.id ?? "";
+
+  const [teams, config, picks] = await Promise.all([
+    getAllTeams(),
+    getTournamentConfig(),
+    userId
+      ? getUserSpecialPicks(userId)
+      : Promise.resolve(null),
+  ]);
+
+  const locked = config
+    ? config.tournamentStartsAt.getTime() <= Date.now()
+    : false;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 md:py-10 space-y-6">
@@ -14,14 +29,19 @@ export default function SpecialsPage() {
           PRONÓSTICOS ESPECIALES
         </h1>
         <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-          Apostá a quién va a ser <strong>campeón</strong>,{" "}
-          <strong>goleador</strong>, mejor jugador y más. Suma puntos bonus que
-          se reparten al final del torneo.
+          Apostá a quién va a ser <strong>campeón</strong>, subcampeón, tercero
+          y país más goleador. Suma puntos bonus al finalizar el torneo.
         </p>
       </header>
 
       <SpecialPicksForm
-        initialPicks={currentUserSpecialPicks}
+        teams={teams}
+        initialPicks={{
+          championTeamId: picks?.championTeamId ?? null,
+          runnerUpTeamId: picks?.runnerUpTeamId ?? null,
+          thirdPlaceTeamId: picks?.thirdPlaceTeamId ?? null,
+          mostGoalsTeamId: picks?.mostGoalsTeamId ?? null,
+        }}
         locked={locked}
       />
     </div>
