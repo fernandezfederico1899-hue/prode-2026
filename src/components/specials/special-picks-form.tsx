@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AlertCircle, Check, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Check, Lock, Trash2 } from "lucide-react";
 import type { Team } from "@/lib/types";
 import type { PlayerWithTeam } from "@/server/queries/players";
 import {
@@ -11,7 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { submitSpecialPicksAction } from "@/server/actions/specials";
+import {
+  deleteSpecialPicksAction,
+  submitSpecialPicksAction,
+} from "@/server/actions/specials";
 
 type Picks = {
   championTeamId: string | null;
@@ -53,10 +57,37 @@ export function SpecialPicksForm({
   initialPicks: Picks;
   locked: boolean;
 }) {
+  const router = useRouter();
   const [picks, setPicks] = useState<Picks>(initialPicks);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDeleting] = useTransition();
+
+  const hasAnyPick = Object.values(picks).some((v) => v !== null);
+
+  const handleDelete = () => {
+    if (!confirm("¿Borrar TODO tu pronóstico especial (campeón, goleador, etc)?")) {
+      return;
+    }
+    setError(null);
+    startDeleting(async () => {
+      const result = await deleteSpecialPicksAction();
+      if (!result.ok) {
+        setError(errorMessage(result.error));
+        return;
+      }
+      setPicks({
+        championTeamId: null,
+        runnerUpTeamId: null,
+        thirdPlaceTeamId: null,
+        mostGoalsTeamId: null,
+        topScorerPlayerId: null,
+        bestPlayerId: null,
+      });
+      router.refresh();
+    });
+  };
 
   const teamsSorted = [...teams].sort((a, b) => a.name.localeCompare(b.name));
   const playersSorted = [...players].sort((a, b) =>
@@ -131,7 +162,7 @@ export function SpecialPicksForm({
             </div>
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || isDeleting}
               className="w-full py-4 bg-primary text-primary-foreground rounded-md font-display text-2xl tracking-wider hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-wait"
             >
               {saved ? (
@@ -151,9 +182,22 @@ export function SpecialPicksForm({
                 {error}
               </p>
             )}
-            <p className="text-xs text-center text-muted-foreground mt-3">
-              Se cierran al kickoff del primer partido del Mundial.
-            </p>
+            <div className="mt-3 flex items-center justify-between gap-3 text-xs">
+              <p className="text-muted-foreground">
+                Se cierran al kickoff del primer partido del Mundial.
+              </p>
+              {hasAnyPick && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isPending || isDeleting}
+                  className="inline-flex items-center gap-1 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  {isDeleting ? "Borrando…" : "Borrar todo"}
+                </button>
+              )}
+            </div>
           </>
         )}
       </div>

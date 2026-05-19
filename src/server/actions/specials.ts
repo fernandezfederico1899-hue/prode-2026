@@ -67,3 +67,31 @@ export async function submitSpecialPicksAction(
   revalidatePath("/specials");
   return { ok: true };
 }
+
+/**
+ * Borra el pronóstico especial del usuario logueado. Mismo lock que submit:
+ * solo permitido antes del kickoff del torneo.
+ */
+export async function deleteSpecialPicksAction(): Promise<SubmitResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, error: "unauthorized" };
+  if (session.user.status !== "approved") {
+    return { ok: false, error: "not_approved" };
+  }
+
+  const config = await db.query.tournamentConfig.findFirst({
+    where: eq(tournamentConfig.id, 1),
+    columns: { tournamentStartsAt: true },
+  });
+  if (!config) return { ok: false, error: "no_tournament_config" };
+  if (config.tournamentStartsAt.getTime() <= Date.now()) {
+    return { ok: false, error: "tournament_started" };
+  }
+
+  await db
+    .delete(specialPredictions)
+    .where(eq(specialPredictions.userId, session.user.id));
+
+  revalidatePath("/specials");
+  return { ok: true };
+}
