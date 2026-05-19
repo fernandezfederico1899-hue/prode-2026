@@ -26,6 +26,9 @@ export async function updateProfileNameAction(
 ): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { ok: false, error: "unauthorized" };
+  if (session.user.status !== "approved") {
+    return { ok: false, error: "not_approved" };
+  }
 
   const parsed = updateNameSchema.safeParse(input);
   if (!parsed.success) {
@@ -54,6 +57,9 @@ export async function uploadAvatarAction(
 ): Promise<ActionResult<{ url: string }>> {
   const session = await auth();
   if (!session?.user?.id) return { ok: false, error: "unauthorized" };
+  if (session.user.status !== "approved") {
+    return { ok: false, error: "not_approved" };
+  }
   if (!env.BLOB_READ_WRITE_TOKEN) {
     return { ok: false, error: "blob_not_configured" };
   }
@@ -91,6 +97,9 @@ export async function uploadAvatarAction(
 export async function removeAvatarAction(): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { ok: false, error: "unauthorized" };
+  if (session.user.status !== "approved") {
+    return { ok: false, error: "not_approved" };
+  }
 
   await db
     .update(users)
