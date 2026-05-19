@@ -1,178 +1,274 @@
-// Las env vars se cargan vía `tsx --env-file=.env.local` (ver package.json).
+// Seed real del Mundial 2026 con data oficial post-draw.
+// Fuente: openfootball/worldcup.json (https://github.com/openfootball/worldcup.json)
+// - 48 equipos en 12 grupos
+// - 72 partidos de fase de grupos con fechas y sedes oficiales
+// - Los partidos de KO (R32 y posteriores) tienen placeholders (W95, L101) que
+//   se resuelven cuando se definen los cruces — los saltamos en este seed.
+//
+// Ejecutar con: pnpm db:seed (usa --env-file=.env.local)
+
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { db } from "./index";
 import { matches, teams, tournamentConfig } from "./schema";
 
 // ============================================================
-// Tournament config (singleton id = 1)
+// Mapping: nombre openfootball → datos del equipo
 // ============================================================
 
-const TOURNAMENT_STARTS_AT = new Date("2026-06-11T17:00:00.000-03:00");
-
-// ============================================================
-// Teams (32 confirmados para WC 2026 — Mundial real tiene 48,
-// el resto se suma cuando openfootball publique el fixture final)
-// ============================================================
-
-const TEAMS_DATA: Array<{
+type TeamSpec = {
   fifaCode: string;
-  name: string;
-  flagCode: string;
-  groupLetter: string;
-}> = [
+  nameEs: string;
+  flagCode: string; // ISO 3166-1 alpha-2 lowercase
+};
+
+const TEAM_MAP: Record<string, TeamSpec> = {
   // Grupo A
-  { fifaCode: "ARG", name: "Argentina", flagCode: "ar", groupLetter: "A" },
-  { fifaCode: "MEX", name: "México", flagCode: "mx", groupLetter: "A" },
-  { fifaCode: "MAR", name: "Marruecos", flagCode: "ma", groupLetter: "A" },
-  { fifaCode: "URU", name: "Uruguay", flagCode: "uy", groupLetter: "A" },
+  Mexico: { fifaCode: "MEX", nameEs: "México", flagCode: "mx" },
+  "South Africa": { fifaCode: "RSA", nameEs: "Sudáfrica", flagCode: "za" },
+  "South Korea": { fifaCode: "KOR", nameEs: "Corea del Sur", flagCode: "kr" },
+  "Czech Republic": {
+    fifaCode: "CZE",
+    nameEs: "República Checa",
+    flagCode: "cz",
+  },
   // Grupo B
-  { fifaCode: "ESP", name: "España", flagCode: "es", groupLetter: "B" },
-  { fifaCode: "USA", name: "Estados Unidos", flagCode: "us", groupLetter: "B" },
-  { fifaCode: "NED", name: "Países Bajos", flagCode: "nl", groupLetter: "B" },
-  { fifaCode: "SEN", name: "Senegal", flagCode: "sn", groupLetter: "B" },
+  Canada: { fifaCode: "CAN", nameEs: "Canadá", flagCode: "ca" },
+  "Bosnia & Herzegovina": {
+    fifaCode: "BIH",
+    nameEs: "Bosnia y Herzegovina",
+    flagCode: "ba",
+  },
+  Qatar: { fifaCode: "QAT", nameEs: "Qatar", flagCode: "qa" },
+  Switzerland: { fifaCode: "SUI", nameEs: "Suiza", flagCode: "ch" },
   // Grupo C
-  { fifaCode: "BRA", name: "Brasil", flagCode: "br", groupLetter: "C" },
-  { fifaCode: "ENG", name: "Inglaterra", flagCode: "gb", groupLetter: "C" },
-  { fifaCode: "JPN", name: "Japón", flagCode: "jp", groupLetter: "C" },
-  { fifaCode: "SUI", name: "Suiza", flagCode: "ch", groupLetter: "C" },
+  Brazil: { fifaCode: "BRA", nameEs: "Brasil", flagCode: "br" },
+  Morocco: { fifaCode: "MAR", nameEs: "Marruecos", flagCode: "ma" },
+  Haiti: { fifaCode: "HAI", nameEs: "Haití", flagCode: "ht" },
+  Scotland: { fifaCode: "SCO", nameEs: "Escocia", flagCode: "gb-sct" },
   // Grupo D
-  { fifaCode: "FRA", name: "Francia", flagCode: "fr", groupLetter: "D" },
-  { fifaCode: "GER", name: "Alemania", flagCode: "de", groupLetter: "D" },
-  { fifaCode: "POR", name: "Portugal", flagCode: "pt", groupLetter: "D" },
-  { fifaCode: "COL", name: "Colombia", flagCode: "co", groupLetter: "D" },
+  USA: { fifaCode: "USA", nameEs: "Estados Unidos", flagCode: "us" },
+  Paraguay: { fifaCode: "PAR", nameEs: "Paraguay", flagCode: "py" },
+  Australia: { fifaCode: "AUS", nameEs: "Australia", flagCode: "au" },
+  Turkey: { fifaCode: "TUR", nameEs: "Turquía", flagCode: "tr" },
   // Grupo E
-  { fifaCode: "CRO", name: "Croacia", flagCode: "hr", groupLetter: "E" },
-  { fifaCode: "BEL", name: "Bélgica", flagCode: "be", groupLetter: "E" },
+  Germany: { fifaCode: "GER", nameEs: "Alemania", flagCode: "de" },
+  Curaçao: { fifaCode: "CUW", nameEs: "Curazao", flagCode: "cw" },
+  "Ivory Coast": { fifaCode: "CIV", nameEs: "Costa de Marfil", flagCode: "ci" },
+  Ecuador: { fifaCode: "ECU", nameEs: "Ecuador", flagCode: "ec" },
   // Grupo F
-  { fifaCode: "DEN", name: "Dinamarca", flagCode: "dk", groupLetter: "F" },
-  { fifaCode: "POL", name: "Polonia", flagCode: "pl", groupLetter: "F" },
+  Netherlands: { fifaCode: "NED", nameEs: "Países Bajos", flagCode: "nl" },
+  Japan: { fifaCode: "JPN", nameEs: "Japón", flagCode: "jp" },
+  Sweden: { fifaCode: "SWE", nameEs: "Suecia", flagCode: "se" },
+  Tunisia: { fifaCode: "TUN", nameEs: "Túnez", flagCode: "tn" },
   // Grupo G
-  { fifaCode: "AUS", name: "Australia", flagCode: "au", groupLetter: "G" },
-  { fifaCode: "ECU", name: "Ecuador", flagCode: "ec", groupLetter: "G" },
+  Belgium: { fifaCode: "BEL", nameEs: "Bélgica", flagCode: "be" },
+  Egypt: { fifaCode: "EGY", nameEs: "Egipto", flagCode: "eg" },
+  Iran: { fifaCode: "IRN", nameEs: "Irán", flagCode: "ir" },
+  "New Zealand": { fifaCode: "NZL", nameEs: "Nueva Zelanda", flagCode: "nz" },
   // Grupo H
-  { fifaCode: "KOR", name: "Corea del Sur", flagCode: "kr", groupLetter: "H" },
-  { fifaCode: "IRN", name: "Irán", flagCode: "ir", groupLetter: "H" },
+  Spain: { fifaCode: "ESP", nameEs: "España", flagCode: "es" },
+  "Cape Verde": { fifaCode: "CPV", nameEs: "Cabo Verde", flagCode: "cv" },
+  "Saudi Arabia": {
+    fifaCode: "KSA",
+    nameEs: "Arabia Saudita",
+    flagCode: "sa",
+  },
+  Uruguay: { fifaCode: "URU", nameEs: "Uruguay", flagCode: "uy" },
   // Grupo I
-  { fifaCode: "CAN", name: "Canadá", flagCode: "ca", groupLetter: "I" },
-  { fifaCode: "TUN", name: "Túnez", flagCode: "tn", groupLetter: "I" },
+  France: { fifaCode: "FRA", nameEs: "Francia", flagCode: "fr" },
+  Senegal: { fifaCode: "SEN", nameEs: "Senegal", flagCode: "sn" },
+  Iraq: { fifaCode: "IRQ", nameEs: "Iraq", flagCode: "iq" },
+  Norway: { fifaCode: "NOR", nameEs: "Noruega", flagCode: "no" },
   // Grupo J
-  { fifaCode: "NGA", name: "Nigeria", flagCode: "ng", groupLetter: "J" },
-  { fifaCode: "EGY", name: "Egipto", flagCode: "eg", groupLetter: "J" },
+  Argentina: { fifaCode: "ARG", nameEs: "Argentina", flagCode: "ar" },
+  Algeria: { fifaCode: "ALG", nameEs: "Argelia", flagCode: "dz" },
+  Austria: { fifaCode: "AUT", nameEs: "Austria", flagCode: "at" },
+  Jordan: { fifaCode: "JOR", nameEs: "Jordania", flagCode: "jo" },
   // Grupo K
-  { fifaCode: "SRB", name: "Serbia", flagCode: "rs", groupLetter: "K" },
-  { fifaCode: "WAL", name: "Gales", flagCode: "gb-wls", groupLetter: "K" },
+  Portugal: { fifaCode: "POR", nameEs: "Portugal", flagCode: "pt" },
+  "DR Congo": { fifaCode: "COD", nameEs: "RD Congo", flagCode: "cd" },
+  Uzbekistan: { fifaCode: "UZB", nameEs: "Uzbekistán", flagCode: "uz" },
+  Colombia: { fifaCode: "COL", nameEs: "Colombia", flagCode: "co" },
   // Grupo L
-  { fifaCode: "PAR", name: "Paraguay", flagCode: "py", groupLetter: "L" },
-  { fifaCode: "TUR", name: "Turquía", flagCode: "tr", groupLetter: "L" },
-];
+  England: { fifaCode: "ENG", nameEs: "Inglaterra", flagCode: "gb-eng" },
+  Croatia: { fifaCode: "CRO", nameEs: "Croacia", flagCode: "hr" },
+  Ghana: { fifaCode: "GHA", nameEs: "Ghana", flagCode: "gh" },
+  Panama: { fifaCode: "PAN", nameEs: "Panamá", flagCode: "pa" },
+};
 
 // ============================================================
-// Helper: días desde la fecha de inicio del torneo
+// Loader del JSON con tipos
 // ============================================================
 
-function dayOfTournament(dayOffset: number, hourArt = 17): Date {
-  const d = new Date(TOURNAMENT_STARTS_AT);
-  d.setUTCDate(d.getUTCDate() + dayOffset);
-  d.setUTCHours(hourArt + 3, 0, 0, 0); // ART = UTC-3, así que hora ART X = UTC X+3
-  return d;
+type OpenFootballMatch = {
+  round: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM UTC±N
+  team1: string;
+  team2: string;
+  group?: string;
+  ground?: string;
+};
+
+function loadWorldCupJson(): { matches: OpenFootballMatch[] } {
+  const path = resolve(process.cwd(), "src/data/wc2026.json");
+  const raw = readFileSync(path, "utf8");
+  return JSON.parse(raw);
 }
 
 // ============================================================
-// Matches del fixture (group stage de los grupos A-D)
-// 12 partidos para arrancar; los del KO se generan post-grupos.
+// Helpers
 // ============================================================
 
-const MATCHES_DATA: Array<{
-  homeCode: string;
-  awayCode: string;
-  kickoff: Date;
-  venue: string;
-  group: string;
-}> = [
-  // Grupo A
-  { homeCode: "MEX", awayCode: "MAR", kickoff: dayOfTournament(0, 17), venue: "Estadio Azteca, México DF", group: "A" },
-  { homeCode: "ARG", awayCode: "URU", kickoff: dayOfTournament(1, 16), venue: "MetLife Stadium, New York", group: "A" },
-  { homeCode: "ARG", awayCode: "MEX", kickoff: dayOfTournament(5, 16), venue: "SoFi Stadium, Los Angeles", group: "A" },
-  // Grupo B
-  { homeCode: "ESP", awayCode: "SEN", kickoff: dayOfTournament(1, 13), venue: "SoFi Stadium, Los Angeles", group: "B" },
-  { homeCode: "NED", awayCode: "USA", kickoff: dayOfTournament(2, 16), venue: "Lumen Field, Seattle", group: "B" },
-  { homeCode: "ESP", awayCode: "NED", kickoff: dayOfTournament(6, 16), venue: "AT&T Stadium, Dallas", group: "B" },
-  // Grupo C
-  { homeCode: "BRA", awayCode: "SUI", kickoff: dayOfTournament(2, 13), venue: "Hard Rock Stadium, Miami", group: "C" },
-  { homeCode: "ENG", awayCode: "JPN", kickoff: dayOfTournament(3, 16), venue: "BC Place, Vancouver", group: "C" },
-  { homeCode: "BRA", awayCode: "ENG", kickoff: dayOfTournament(7, 16), venue: "MetLife Stadium, New York", group: "C" },
-  // Grupo D
-  { homeCode: "FRA", awayCode: "COL", kickoff: dayOfTournament(3, 13), venue: "Mercedes-Benz Stadium, Atlanta", group: "D" },
-  { homeCode: "GER", awayCode: "POR", kickoff: dayOfTournament(4, 16), venue: "Levi's Stadium, San Francisco", group: "D" },
-  { homeCode: "FRA", awayCode: "GER", kickoff: dayOfTournament(8, 16), venue: "Arrowhead Stadium, Kansas City", group: "D" },
-];
+/**
+ * Parsea "HH:MM UTC±N" + "YYYY-MM-DD" en un Date UTC absoluto.
+ * Ej "13:00 UTC-6" + "2026-06-11" → Date con .toISOString() === "2026-06-11T19:00:00.000Z"
+ */
+function parseKickoff(date: string, time: string): Date {
+  const match = time.match(/^(\d{2}):(\d{2})\s+UTC([+-]\d+)$/);
+  if (!match) throw new Error(`Cannot parse time: ${time}`);
+  const [, hh, mm, off] = match;
+  const offsetHours = parseInt(off, 10);
+  // El offset que da openfootball es la zona local del estadio.
+  // hora UTC = hora local - offset
+  const localHour = parseInt(hh, 10);
+  const utcHour = localHour - offsetHours;
+  // Date.UTC permite valores fuera de rango — los normaliza al día/hora correctos.
+  const [y, m, d] = date.split("-").map((s) => parseInt(s, 10));
+  return new Date(Date.UTC(y, m - 1, d, utcHour, parseInt(mm, 10), 0));
+}
+
+function isGroupMatch(round: string): boolean {
+  return round.startsWith("Matchday");
+}
+
+function groupLetterFromName(group: string | undefined): string | null {
+  if (!group) return null;
+  const match = group.match(/Group\s+([A-L])/);
+  return match ? match[1] : null;
+}
 
 // ============================================================
 // Run
 // ============================================================
 
 async function seed() {
-  console.log("🌱 Iniciando seed...");
+  console.log("🌱 Seed real WC 2026 (data oficial post-draw)\n");
 
-  // 1. tournament_config singleton (id=1)
-  console.log("→ tournament_config");
+  const data = loadWorldCupJson();
+  const allMatches = data.matches;
+  const groupMatches = allMatches.filter((m) => isGroupMatch(m.round));
+  console.log(
+    `→ ${allMatches.length} matches total, ${groupMatches.length} de grupos`,
+  );
+
+  // ---------- 1. tournament_config ----------
+  // Primer partido = inicio del torneo
+  const firstMatch = groupMatches[0];
+  const tournamentStartsAt = parseKickoff(firstMatch.date, firstMatch.time);
+  console.log(`→ Inicio: ${tournamentStartsAt.toISOString()}`);
+
   await db
     .insert(tournamentConfig)
     .values({
       id: 1,
       pozoAmountArs: 20000,
-      tournamentStartsAt: TOURNAMENT_STARTS_AT,
+      tournamentStartsAt,
       poolLocked: false,
       apiSportsDailyCount: 0,
       apiSportsCountDate: new Date().toISOString().slice(0, 10),
     })
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      target: tournamentConfig.id,
+      set: { tournamentStartsAt },
+    });
 
-  // 2. Teams
-  console.log(`→ teams (${TEAMS_DATA.length})`);
-  const insertedTeams = await db
-    .insert(teams)
-    .values(
-      TEAMS_DATA.map((t) => ({
-        fifaCode: t.fifaCode,
-        name: t.name,
-        flagCode: t.flagCode,
-        openfootballName: t.name,
-        groupLetter: t.groupLetter,
-      })),
-    )
-    .onConflictDoNothing()
-    .returning({ id: teams.id, fifaCode: teams.fifaCode });
+  // ---------- 2. teams ----------
+  // Extraer unique teams del JSON
+  const teamNames = new Set<string>();
+  for (const m of groupMatches) {
+    teamNames.add(m.team1);
+    teamNames.add(m.team2);
+  }
 
-  // Re-leer todos los teams para tener el mapping completo
-  const allTeams = await db.query.teams.findMany();
-  const teamByCode = new Map(allTeams.map((t) => [t.fifaCode, t]));
+  const teamsToInsert: Array<{
+    fifaCode: string;
+    name: string;
+    flagCode: string;
+    openfootballName: string;
+    groupLetter: string;
+  }> = [];
 
-  console.log(`  ✓ ${insertedTeams.length} insertados (resto ya existía)`);
+  // Mapear cada team del JSON con su grupo
+  const teamGroup = new Map<string, string>();
+  for (const m of groupMatches) {
+    const letter = groupLetterFromName(m.group);
+    if (letter) {
+      teamGroup.set(m.team1, letter);
+      teamGroup.set(m.team2, letter);
+    }
+  }
 
-  // 3. Matches (group stage)
-  console.log(`→ matches (${MATCHES_DATA.length})`);
-  for (const m of MATCHES_DATA) {
-    const home = teamByCode.get(m.homeCode);
-    const away = teamByCode.get(m.awayCode);
-    if (!home || !away) {
-      console.warn(`  ⚠ teams not found: ${m.homeCode} vs ${m.awayCode}`);
+  for (const name of teamNames) {
+    const spec = TEAM_MAP[name];
+    if (!spec) {
+      console.warn(`⚠ Team sin mapping: "${name}" — skip`);
       continue;
     }
+    teamsToInsert.push({
+      fifaCode: spec.fifaCode,
+      name: spec.nameEs,
+      flagCode: spec.flagCode,
+      openfootballName: name,
+      groupLetter: teamGroup.get(name) ?? "?",
+    });
+  }
+
+  console.log(`→ teams: ${teamsToInsert.length}`);
+  await db.insert(teams).values(teamsToInsert).onConflictDoNothing();
+
+  // Re-leer para tener IDs
+  const allTeams = await db.query.teams.findMany();
+  const teamByFifa = new Map(allTeams.map((t) => [t.fifaCode, t]));
+
+  // ---------- 3. matches (group stage) ----------
+  console.log(`→ matches (group stage): ${groupMatches.length}`);
+  let inserted = 0;
+  let skipped = 0;
+  for (const m of groupMatches) {
+    const homeSpec = TEAM_MAP[m.team1];
+    const awaySpec = TEAM_MAP[m.team2];
+    if (!homeSpec || !awaySpec) {
+      skipped++;
+      continue;
+    }
+    const home = teamByFifa.get(homeSpec.fifaCode);
+    const away = teamByFifa.get(awaySpec.fifaCode);
+    if (!home || !away) {
+      skipped++;
+      continue;
+    }
+    const kickoff = parseKickoff(m.date, m.time);
+    const letter = groupLetterFromName(m.group);
+
     await db
       .insert(matches)
       .values({
         homeTeamId: home.id,
         awayTeamId: away.id,
-        kickoffAt: m.kickoff,
-        venue: m.venue,
+        kickoffAt: kickoff,
+        venue: m.ground ?? null,
         stage: "group",
-        groupLetter: m.group,
+        groupLetter: letter,
         status: "scheduled",
       })
       .onConflictDoNothing();
+    inserted++;
   }
 
-  console.log("✓ Seed completo.");
+  console.log(`  ✓ ${inserted} insertados (${skipped} skipped)`);
+  console.log("\n✓ Seed completo.");
 }
 
 seed()

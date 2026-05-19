@@ -14,8 +14,9 @@ if (!process.env.DATABASE_URL) {
 
 const sql = neon(process.env.DATABASE_URL);
 
-console.log("⚠️  Resetting schema public (drops all tables)...");
+console.log("⚠️  Resetting schemas public + drizzle (drops everything)...");
 await sql`DROP SCHEMA IF EXISTS public CASCADE`;
+await sql`DROP SCHEMA IF EXISTS drizzle CASCADE`;
 await sql`CREATE SCHEMA public`;
 await sql`GRANT ALL ON SCHEMA public TO neondb_owner`;
 await sql`GRANT ALL ON SCHEMA public TO public`;
