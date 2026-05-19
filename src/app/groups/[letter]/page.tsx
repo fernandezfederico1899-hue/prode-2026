@@ -8,7 +8,7 @@ import { getUserPredictionsByMatch } from "@/server/queries/predictions";
 import type { Prediction } from "@/lib/types";
 import { GroupCard } from "@/components/groups/group-card";
 import { MatchCard } from "@/components/match/match-card";
-import { EditableMatchCard } from "@/components/match/editable-match-card";
+import { InlinePredictCard } from "@/components/match/inline-predict-card";
 
 export default async function GroupDetailPage({
   params,
@@ -79,7 +79,7 @@ export default async function GroupDetailPage({
           <h2 className="font-display text-2xl mb-4">PRÓXIMOS</h2>
           <div className="grid gap-3 md:gap-4 md:grid-cols-2">
             {upcoming.map((m) => (
-              <EditableMatchCard
+              <InlinePredictCard
                 key={m.id}
                 match={m}
                 userPrediction={userPredictions[m.id]}

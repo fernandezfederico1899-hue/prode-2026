@@ -7,7 +7,7 @@ import { getTournamentConfig } from "@/server/queries/tournament-config";
 import { getApprovedCount } from "@/server/queries/users";
 import type { Prediction } from "@/lib/types";
 import { MatchCard } from "@/components/match/match-card";
-import { EditableMatchCard } from "@/components/match/editable-match-card";
+import { InlinePredictCard } from "@/components/match/inline-predict-card";
 
 export default async function Home() {
   const session = await auth();
@@ -136,7 +136,7 @@ export default async function Home() {
           <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {upcomingMatches.map((m) =>
               m.status === "scheduled" ? (
-                <EditableMatchCard
+                <InlinePredictCard
                   key={m.id}
                   match={m}
                   userPrediction={userPredictions[m.id]}

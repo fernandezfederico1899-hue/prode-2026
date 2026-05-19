@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { getAllMatchesWithTeams } from "@/server/queries/matches";
 import { getUserPredictionsByMatch } from "@/server/queries/predictions";
 import { MatchCard } from "@/components/match/match-card";
-import { EditableMatchCard } from "@/components/match/editable-match-card";
+import { InlinePredictCard } from "@/components/match/inline-predict-card";
 
 export default async function PredictPage() {
   const session = await auth();
@@ -63,7 +63,7 @@ export default async function PredictPage() {
           </h2>
           <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {pending.map((m) => (
-              <EditableMatchCard key={m.id} match={m} />
+              <InlinePredictCard key={m.id} match={m} />
             ))}
           </div>
         </section>
@@ -79,7 +79,7 @@ export default async function PredictPage() {
           </h2>
           <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {loaded.map((m) => (
-              <EditableMatchCard
+              <InlinePredictCard
                 key={m.id}
                 match={m}
                 userPrediction={userPredictions[m.id]}

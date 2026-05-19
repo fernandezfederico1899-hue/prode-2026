@@ -7,7 +7,7 @@ import { env } from "@/lib/env";
 // Si CRON_SECRET está vacío, el cron sigue funcionando pero queda abierto a
 // llamadas manuales (útil en dev para forzar sync con curl).
 
-export async function GET(req: Request) {
+async function handle(req: Request) {
   if (env.CRON_SECRET) {
     const auth = req.headers.get("authorization");
     if (auth !== `Bearer ${env.CRON_SECRET}`) {
@@ -26,3 +26,7 @@ export async function GET(req: Request) {
     );
   }
 }
+
+// QStash hace POST por default; tambien aceptamos GET para health checks manuales.
+export const GET = handle;
+export const POST = handle;

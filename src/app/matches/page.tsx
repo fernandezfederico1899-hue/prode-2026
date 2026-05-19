@@ -3,7 +3,7 @@ import { getAllMatchesWithTeams } from "@/server/queries/matches";
 import { getUserPredictionsByMatch } from "@/server/queries/predictions";
 import type { MatchWithTeams, Prediction } from "@/lib/types";
 import { MatchCard } from "@/components/match/match-card";
-import { EditableMatchCard } from "@/components/match/editable-match-card";
+import { InlinePredictCard } from "@/components/match/inline-predict-card";
 import { MatchesViewTabs } from "@/components/match/matches-view-tabs";
 import { StatusBadge } from "@/components/common/status-badge";
 
@@ -88,7 +88,7 @@ function ByStatusView({
           <h2 className="font-display text-2xl mb-4">PRÓXIMOS</h2>
           <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((m) => (
-              <EditableMatchCard
+              <InlinePredictCard
                 key={m.id}
                 match={m}
                 userPrediction={userPredictions[m.id]}
@@ -207,7 +207,7 @@ function ByDateView({
             <div className="grid gap-3 md:gap-4 md:grid-cols-2">
               {dayMatches.map((m) =>
                 m.status === "scheduled" ? (
-                  <EditableMatchCard
+                  <InlinePredictCard
                     key={m.id}
                     match={m}
                     userPrediction={userPredictions[m.id]}
