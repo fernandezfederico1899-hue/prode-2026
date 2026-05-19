@@ -1,25 +1,34 @@
-import Link from "next/link";
+"use client";
+
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 
 export function GoogleButton({
-  href = "/",
+  callbackUrl = "/",
   label = "Continuar con Google",
 }: {
-  href?: string;
+  callbackUrl?: string;
   label?: string;
 }) {
+  const [loading, setLoading] = useState(false);
+
   return (
-    <Link
-      href={href}
-      className="inline-flex w-full items-center justify-center gap-3 px-5 py-4 rounded-md bg-white border-2 border-zinc-200 text-zinc-900 font-bold text-base hover:shadow-md hover:border-zinc-300 transition-all"
+    <button
+      type="button"
+      disabled={loading}
+      onClick={() => {
+        setLoading(true);
+        signIn("google", { callbackUrl });
+      }}
+      className="inline-flex w-full items-center justify-center gap-3 px-5 py-4 rounded-md bg-white border-2 border-zinc-200 text-zinc-900 font-bold text-base hover:shadow-md hover:border-zinc-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
     >
       <GoogleLogo />
-      {label}
-    </Link>
+      {loading ? "Redirigiendo..." : label}
+    </button>
   );
 }
 
 function GoogleLogo() {
-  // SVG oficial de Google "G" multicolor
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

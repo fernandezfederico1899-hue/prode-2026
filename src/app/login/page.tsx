@@ -27,7 +27,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <GoogleButton href="/pending" />
+            <GoogleButton callbackUrl="/" />
 
             <div className="text-xs text-center text-muted-foreground border-t border-border pt-4">
               Si ya jugaste antes, tu cuenta ya está aprobada y entrás directo.
@@ -61,13 +61,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Mockup hint */}
-      <div className="px-4 pb-6">
-        <div className="max-w-md mx-auto rounded-md border border-dashed border-border bg-muted/30 p-3 text-[10px] text-center text-muted-foreground">
-          🚧 Mockup visual — el botón te lleva a la pantalla de "pendiente" para
-          ver el flujo
-        </div>
-      </div>
     </div>
   );
 }
