@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
 const PUBLIC_PATHS = ["/login", "/pending", "/rejected"];
-const PUBLIC_PREFIXES = ["/api/auth", "/_next", "/favicon", "/icon"];
+const PUBLIC_PREFIXES = ["/api/auth", "/api/cron", "/_next", "/favicon", "/icon"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
