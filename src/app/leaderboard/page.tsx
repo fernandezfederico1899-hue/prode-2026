@@ -5,6 +5,7 @@ import { getLeaderboard } from "@/server/queries/leaderboard";
 import { getTournamentConfig } from "@/server/queries/tournament-config";
 import { getApprovedCount } from "@/server/queries/users";
 import { PositionMedal } from "@/components/leaderboard/position-medal";
+import { UserAvatar } from "@/components/common/user-avatar";
 
 export default async function LeaderboardPage() {
   const session = await auth();
@@ -90,19 +91,28 @@ export default async function LeaderboardPage() {
                         <PositionMedal rank={row.rank} isTied={row.isTied} />
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-display text-xl uppercase">
-                          {row.name}
-                          {isCurrent && (
-                            <span className="ml-2 font-sans text-xs font-bold text-primary lowercase">
-                              (vos)
-                            </span>
-                          )}
-                        </div>
-                        {row.isTied && (
-                          <div className="text-xs text-muted-foreground">
-                            empate
+                        <div className="flex items-center gap-3">
+                          <UserAvatar
+                            src={row.image}
+                            name={row.name}
+                            size="md"
+                          />
+                          <div>
+                            <div className="font-display text-xl uppercase leading-none">
+                              {row.name}
+                              {isCurrent && (
+                                <span className="ml-2 font-sans text-xs font-bold text-primary lowercase">
+                                  (vos)
+                                </span>
+                              )}
+                            </div>
+                            {row.isTied && (
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                empate
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="font-display text-3xl text-primary">
@@ -136,6 +146,7 @@ export default async function LeaderboardPage() {
                   )}
                 >
                   <PositionMedal rank={row.rank} isTied={row.isTied} />
+                  <UserAvatar src={row.image} name={row.name} size="md" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">
                       <span className="font-display text-xl uppercase truncate">
@@ -153,8 +164,8 @@ export default async function LeaderboardPage() {
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground tabular-nums">
-                      {row.exactCount} exactos · {row.signCount} signos ·{" "}
-                      {row.wrongCount} errados
+                      {row.exactCount} ex · {row.signCount} sg ·{" "}
+                      {row.wrongCount} er
                     </div>
                   </div>
                   <div className="text-right">
