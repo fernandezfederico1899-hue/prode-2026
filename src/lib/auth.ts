@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
   accounts,
@@ -101,6 +102,21 @@ export const {
           columns: { status: true, email: true },
         });
         if (row) {
+          // Auto-aprobar al admin en su primer login. Si el email matchea
+          // ADMIN_EMAIL y el status quedó `pending` (default), lo subimos a
+          // `approved` para que no se quede trabado en /pending.
+          if (row.email === env.ADMIN_EMAIL && row.status === "pending") {
+            await db
+              .update(users)
+              .set({
+                status: "approved",
+                approvedAt: new Date(),
+                approvedByEmail: row.email,
+              })
+              .where(eq(users.id, userId));
+            row.status = "approved";
+          }
+
           return {
             ...token,
             id: userId,

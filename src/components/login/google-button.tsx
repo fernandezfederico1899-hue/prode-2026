@@ -1,7 +1,5 @@
-"use client";
-
-import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { signIn } from "@/lib/auth";
+import { SubmitButton } from "./submit-button";
 
 export function GoogleButton({
   callbackUrl = "/",
@@ -10,21 +8,18 @@ export function GoogleButton({
   callbackUrl?: string;
   label?: string;
 }) {
-  const [loading, setLoading] = useState(false);
-
   return (
-    <button
-      type="button"
-      disabled={loading}
-      onClick={() => {
-        setLoading(true);
-        signIn("google", { callbackUrl });
+    <form
+      action={async () => {
+        "use server";
+        await signIn("google", { redirectTo: callbackUrl });
       }}
-      className="inline-flex w-full items-center justify-center gap-3 px-5 py-4 rounded-md bg-white border-2 border-zinc-200 text-zinc-900 font-bold text-base hover:shadow-md hover:border-zinc-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      <GoogleLogo />
-      {loading ? "Redirigiendo..." : label}
-    </button>
+      <SubmitButton pendingLabel="Redirigiendo a Google...">
+        <GoogleLogo />
+        {label}
+      </SubmitButton>
+    </form>
   );
 }
 
