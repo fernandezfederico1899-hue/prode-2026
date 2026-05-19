@@ -65,7 +65,10 @@ export async function updateTournamentConfigAction(
 
   revalidatePath("/admin/config");
   revalidatePath("/admin");
+  revalidatePath("/admin/payments");
   revalidatePath("/");
   revalidatePath("/leaderboard");
+  revalidatePath("/champion");
+  revalidatePath("/specials");
   return { ok: true };
 }
