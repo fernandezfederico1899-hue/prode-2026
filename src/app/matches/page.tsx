@@ -1,5 +1,7 @@
+import { auth } from "@/lib/auth";
 import { getAllMatchesWithTeams } from "@/server/queries/matches";
-import type { MatchWithTeams } from "@/lib/types";
+import { getUserPredictionsByMatch } from "@/server/queries/predictions";
+import type { MatchWithTeams, Prediction } from "@/lib/types";
 import { MatchCard } from "@/components/match/match-card";
 import { EditableMatchCard } from "@/components/match/editable-match-card";
 import { MatchesViewTabs } from "@/components/match/matches-view-tabs";
@@ -13,9 +15,15 @@ export default async function MatchesPage({
   const { view } = await searchParams;
   const currentView: "date" | "status" = view === "status" ? "status" : "date";
 
-  const matches = await getAllMatchesWithTeams();
-  // userPredictions vendrá de queries cuando wiring exista.
-  const userPredictions: Record<string, never> = {};
+  const session = await auth();
+  const userId = session?.user?.id ?? "";
+
+  const [matches, userPredictions] = await Promise.all([
+    getAllMatchesWithTeams(),
+    userId
+      ? getUserPredictionsByMatch(userId)
+      : Promise.resolve({} as Record<string, Prediction>),
+  ]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 space-y-6">
@@ -47,7 +55,7 @@ function ByStatusView({
   userPredictions,
 }: {
   matches: MatchWithTeams[];
-  userPredictions: Record<string, never>;
+  userPredictions: Record<string, Prediction>;
 }) {
   const live = matches.filter((m) => m.status === "live");
   const upcoming = matches
@@ -141,7 +149,7 @@ function ByDateView({
   userPredictions,
 }: {
   matches: MatchWithTeams[];
-  userPredictions: Record<string, never>;
+  userPredictions: Record<string, Prediction>;
 }) {
   const byDate = new Map<string, { date: Date; matches: MatchWithTeams[] }>();
   for (const m of matches) {

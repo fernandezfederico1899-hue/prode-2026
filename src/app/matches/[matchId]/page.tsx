@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMatchByIdWithTeams } from "@/server/queries/matches";
+import { getAllPredictionsForMatch } from "@/server/queries/predictions";
 import { auth } from "@/lib/auth";
 import { TeamLabel } from "@/components/common/team-label";
 import { StatusBadge } from "@/components/common/status-badge";
@@ -31,14 +32,7 @@ export default async function MatchDetailPage({
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
   const showOthers = isLive || isFinished;
-  // Pronósticos de todos vendrán de queries cuando wiring de predictions exista.
-  type PredWithUser = {
-    id: string;
-    homeScore: number;
-    awayScore: number;
-    user: { id: string; name: string };
-  };
-  const otherPreds: PredWithUser[] = [];
+  const otherPreds = showOthers ? await getAllPredictionsForMatch(match.id) : [];
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">

@@ -1,8 +1,20 @@
-import { matches, userPredictions } from "@/lib/mock-data";
+import { auth } from "@/lib/auth";
+import { getAllMatchesWithTeams } from "@/server/queries/matches";
+import { getUserPredictionsByMatch } from "@/server/queries/predictions";
 import { MatchCard } from "@/components/match/match-card";
 import { EditableMatchCard } from "@/components/match/editable-match-card";
 
-export default function PredictPage() {
+export default async function PredictPage() {
+  const session = await auth();
+  const userId = session?.user?.id ?? "";
+
+  const [matches, userPredictions] = await Promise.all([
+    getAllMatchesWithTeams(),
+    userId
+      ? getUserPredictionsByMatch(userId)
+      : Promise.resolve({} as Record<string, never>),
+  ]);
+
   // Editables: podés cargar/cambiar el pronóstico (no empezó todavía)
   const editable = matches.filter((m) => m.status === "scheduled");
   const pending = editable.filter((m) => !userPredictions[m.id]);

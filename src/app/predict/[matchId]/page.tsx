@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, MapPin } from "lucide-react";
-import { matches, userPredictions } from "@/lib/mock-data";
+import { auth } from "@/lib/auth";
+import { getMatchByIdWithTeams } from "@/server/queries/matches";
+import { getUserPredictionForMatch } from "@/server/queries/predictions";
 import { PredictForm } from "./predict-form";
 
 const DATE_FORMAT = new Intl.DateTimeFormat("es-AR", {
@@ -19,10 +21,13 @@ export default async function PredictMatchPage({
   params: Promise<{ matchId: string }>;
 }) {
   const { matchId } = await params;
-  const match = matches.find((m) => m.id === matchId);
+  const match = await getMatchByIdWithTeams(matchId);
   if (!match) notFound();
 
-  const existing = userPredictions[match.id];
+  const session = await auth();
+  const existing = session?.user?.id
+    ? await getUserPredictionForMatch(session.user.id, match.id)
+    : null;
   const isLocked = match.status !== "scheduled" && match.status !== "postponed";
 
   return (
