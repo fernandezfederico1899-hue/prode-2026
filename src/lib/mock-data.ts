@@ -443,6 +443,77 @@ export const SPECIAL_BONUSES = {
   mostGoals: { label: "País más goleador", points: 5 },
 } as const;
 
+// ========== ADMIN — Pending users ==========
+// Usuarios que se loguearon con Google y esperan aprobación.
+export type PendingUser = {
+  id: string;
+  email: string;
+  name: string;
+  requestedAt: Date;
+};
+
+export const pendingUsers: PendingUser[] = [
+  {
+    id: "u-pending-1",
+    email: "carlos.benitez@gmail.com",
+    name: "Carlos Benítez",
+    requestedAt: new Date(now.getTime() - 1 * 60 * 60 * 1000),
+  },
+  {
+    id: "u-pending-2",
+    email: "martin.fernandez@gmail.com",
+    name: "Martín Fernández",
+    requestedAt: new Date(now.getTime() - 5 * 60 * 60 * 1000),
+  },
+  {
+    id: "u-pending-3",
+    email: "rodrigo.gomez@gmail.com",
+    name: "Rodrigo Gómez",
+    requestedAt: new Date(now.getTime() - 26 * 60 * 60 * 1000),
+  },
+];
+
+// ========== ADMIN — Audit log entries ==========
+export type AuditEntry = {
+  id: string;
+  adminEmail: string;
+  action: string;
+  target: string;
+  createdAt: Date;
+};
+
+export const auditLog: AuditEntry[] = [
+  {
+    id: "a-1",
+    adminEmail: "fernandezfederico1899@gmail.com",
+    action: "approve_user",
+    target: "Manuel (manuel@gmail.com)",
+    createdAt: new Date(now.getTime() - 30 * 60 * 1000),
+  },
+  {
+    id: "a-2",
+    adminEmail: "fernandezfederico1899@gmail.com",
+    action: "correct_score",
+    target: "Brasil 3-1 Suiza (era 2-1)",
+    createdAt: new Date(now.getTime() - 4 * 60 * 60 * 1000),
+  },
+  {
+    id: "a-3",
+    adminEmail: "fernandezfederico1899@gmail.com",
+    action: "mark_payment",
+    target: "Diego — pagó",
+    createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000),
+  },
+];
+
+// ========== ADMIN — API-Sports usage ==========
+export const apiSportsUsage = {
+  todayCount: 47,
+  dailyLimit: 100,
+  lastSyncAt: new Date(now.getTime() - 2 * 60 * 1000),
+  lastError: null as string | null,
+};
+
 // ========== BRACKET (Eliminatoria) ==========
 // Mock del bracket post-fase de grupos.
 // En WC 2026 hay 5 fases: R32 → R16 → QF → SF + 3rd → Final.

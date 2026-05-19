@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Shield } from "lucide-react";
 import { currentUser } from "@/lib/mock-data";
 import { TeamLabel } from "@/components/common/team-label";
 import { ThemeToggle } from "@/components/common/theme-toggle";
@@ -52,6 +54,23 @@ export default function ProfilePage() {
           </label>
         </div>
       </section>
+
+      {/* Admin access (solo visible si el usuario es admin — en mockup siempre se muestra) */}
+      <Link
+        href="/admin"
+        className="block rounded-xl border-2 border-secondary bg-secondary/5 p-4 hover:bg-secondary/10 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Shield className="w-6 h-6 text-secondary" />
+          <div className="flex-1">
+            <div className="font-bold uppercase tracking-wide">Modo admin</div>
+            <div className="text-xs text-muted-foreground">
+              Aprobar usuarios, corregir resultados, marcar pagos
+            </div>
+          </div>
+          <span className="text-secondary font-bold">→</span>
+        </div>
+      </Link>
 
       <div className="text-xs text-center text-muted-foreground">
         Mockup visual — sin DB ni auth real. Esto se conecta en M1.
