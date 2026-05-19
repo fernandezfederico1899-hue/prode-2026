@@ -1,5 +1,5 @@
 import { matches, userPredictions } from "@/lib/mock-data";
-import type { Match } from "@/lib/mock-data";
+import type { MatchWithTeams } from "@/lib/types";
 import { MatchCard } from "@/components/match/match-card";
 import { EditableMatchCard } from "@/components/match/editable-match-card";
 import { StatusBadge } from "@/components/common/status-badge";
@@ -37,7 +37,7 @@ function isToday(key: string) {
 
 export default function AgendaPage() {
   // Agrupar partidos por fecha ART
-  const byDate = new Map<string, { date: Date; matches: Match[] }>();
+  const byDate = new Map<string, { date: Date; matches: MatchWithTeams[] }>();
 
   for (const m of matches) {
     const key = formatDateKey(m.kickoffAt);

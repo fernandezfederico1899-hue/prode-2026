@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, Clock } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ScoreInput } from "@/components/match/score-input";
-import type { Match, Prediction } from "@/lib/mock-data";
+import type { MatchWithTeams, Prediction } from "@/lib/types";
 
 const KICKOFF_FORMAT = new Intl.DateTimeFormat("es-AR", {
   weekday: "long",
@@ -20,7 +20,7 @@ export function PredictSheet({
   initialPrediction,
   children,
 }: {
-  match: Match;
+  match: MatchWithTeams;
   initialPrediction?: Prediction;
   children: React.ReactNode;
 }) {

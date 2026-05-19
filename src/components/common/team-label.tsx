@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { Team } from "@/lib/mock-data";
+import type { Team } from "@/lib/types";
 
 type TeamLabelProps = {
   team: Team;

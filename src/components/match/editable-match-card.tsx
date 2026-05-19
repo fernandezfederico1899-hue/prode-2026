@@ -1,6 +1,6 @@
 import { MatchCard } from "./match-card";
 import { PredictSheet } from "./predict-sheet";
-import type { Match, Prediction } from "@/lib/mock-data";
+import type { MatchWithTeams, Prediction } from "@/lib/types";
 
 /**
  * MatchCard que abre una sheet/dialog inline para cargar o editar el
@@ -12,7 +12,7 @@ export function EditableMatchCard({
   match,
   userPrediction,
 }: {
-  match: Match;
+  match: MatchWithTeams;
   userPrediction?: Prediction;
 }) {
   return (

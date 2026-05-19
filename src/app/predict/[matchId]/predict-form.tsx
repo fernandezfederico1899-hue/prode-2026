@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, Lock } from "lucide-react";
-import type { Match } from "@/lib/mock-data";
+import type { MatchWithTeams } from "@/lib/types";
 import { ScoreInput } from "@/components/match/score-input";
 
 export function PredictForm({
@@ -11,7 +11,7 @@ export function PredictForm({
   initialAway,
   locked,
 }: {
-  match: Match;
+  match: MatchWithTeams;
   initialHome: number;
   initialAway: number;
   locked: boolean;

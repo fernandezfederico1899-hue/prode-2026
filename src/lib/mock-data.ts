@@ -1,57 +1,23 @@
-// Mock data para el mockup visual — NO usar en producción.
-// Cuando lleguemos a M1 esto viene de Neon + Drizzle.
+// Mock data — usado por las páginas que todavía no migramos a queries reales.
+// En M1.3 vamos reemplazando esto progresivamente; mock-data va a quedar
+// solo para páginas legacy (bracket, champion, admin parcial).
 
-export type Team = {
-  id: string;
-  fifaCode: string;
-  name: string;
-  flagCode: string; // ISO 3166-1 alpha-2 lowercase
-  groupLetter: string;
-};
+import type {
+  Match,
+  MatchStage,
+  MatchStatus,
+  MatchWithTeams,
+  Prediction,
+  Team,
+} from "@/lib/types";
 
-export type MatchStage =
-  | "group"
-  | "round_of_32"
-  | "round_of_16"
-  | "quarter"
-  | "semi"
-  | "third_place"
-  | "final";
-
-export type MatchStatus =
-  | "scheduled"
-  | "live"
-  | "finished"
-  | "postponed"
-  | "cancelled";
-
-export type Match = {
-  id: string;
-  homeTeam: Team;
-  awayTeam: Team;
-  kickoffAt: Date;
-  venue: string;
-  stage: MatchStage;
-  groupLetter: string | null;
-  status: MatchStatus;
-  homeScore: number | null;
-  awayScore: number | null;
-};
+export type { Match, MatchStage, MatchStatus, MatchWithTeams, Prediction, Team };
 
 export type User = {
   id: string;
   name: string;
   avatarUrl?: string;
   favoriteTeam?: Team;
-};
-
-export type Prediction = {
-  id: string;
-  userId: string;
-  matchId: string;
-  homeScore: number;
-  awayScore: number;
-  points: number | null;
 };
 
 export type LeaderboardEntry = {
@@ -65,47 +31,115 @@ export type LeaderboardEntry = {
   hasPaid: boolean;
 };
 
+// ========== Helpers para enriquecer mocks a tipos completos ==========
+const team = (
+  id: string,
+  fifaCode: string,
+  name: string,
+  flagCode: string,
+  groupLetter: string,
+): Team => ({
+  id,
+  fifaCode,
+  name,
+  flagCode,
+  openfootballName: name,
+  apiSportsId: null,
+  groupLetter,
+});
+
+const NOW = new Date();
+
+const match = (
+  id: string,
+  homeTeam: Team,
+  awayTeam: Team,
+  kickoffAt: Date,
+  venue: string,
+  stage: MatchStage,
+  groupLetter: string | null,
+  status: MatchStatus,
+  homeScore: number | null,
+  awayScore: number | null,
+): MatchWithTeams => ({
+  id,
+  openfootballMatchId: null,
+  apiSportsFixtureId: null,
+  homeTeamId: homeTeam.id,
+  awayTeamId: awayTeam.id,
+  homeTeam,
+  awayTeam,
+  kickoffAt,
+  venue,
+  stage,
+  groupLetter,
+  status,
+  homeScore,
+  awayScore,
+  finishedAt: status === "finished" ? kickoffAt : null,
+  lastSyncedAt: null,
+  createdAt: NOW,
+  updatedAt: NOW,
+});
+
+const prediction = (
+  id: string,
+  userId: string,
+  matchId: string,
+  homeScore: number,
+  awayScore: number,
+  points: number | null,
+): Prediction => ({
+  id,
+  userId,
+  matchId,
+  homeScore,
+  awayScore,
+  points,
+  createdAt: NOW,
+  updatedAt: NOW,
+});
+
 // ========== TEAMS ==========
-// 16 teams = 4 grupos de 4 para el mockup (en producción serán 48 / 12 grupos).
 export const teams: Team[] = [
   // Grupo A
-  { id: "t-arg", fifaCode: "ARG", name: "Argentina", flagCode: "ar", groupLetter: "A" },
-  { id: "t-mex", fifaCode: "MEX", name: "México", flagCode: "mx", groupLetter: "A" },
-  { id: "t-mar", fifaCode: "MAR", name: "Marruecos", flagCode: "ma", groupLetter: "A" },
-  { id: "t-uru", fifaCode: "URU", name: "Uruguay", flagCode: "uy", groupLetter: "A" },
+  team("t-arg", "ARG", "Argentina", "ar", "A"),
+  team("t-mex", "MEX", "México", "mx", "A"),
+  team("t-mar", "MAR", "Marruecos", "ma", "A"),
+  team("t-uru", "URU", "Uruguay", "uy", "A"),
   // Grupo B
-  { id: "t-esp", fifaCode: "ESP", name: "España", flagCode: "es", groupLetter: "B" },
-  { id: "t-usa", fifaCode: "USA", name: "Estados Unidos", flagCode: "us", groupLetter: "B" },
-  { id: "t-ned", fifaCode: "NED", name: "Países Bajos", flagCode: "nl", groupLetter: "B" },
-  { id: "t-sen", fifaCode: "SEN", name: "Senegal", flagCode: "sn", groupLetter: "B" },
+  team("t-esp", "ESP", "España", "es", "B"),
+  team("t-usa", "USA", "Estados Unidos", "us", "B"),
+  team("t-ned", "NED", "Países Bajos", "nl", "B"),
+  team("t-sen", "SEN", "Senegal", "sn", "B"),
   // Grupo C
-  { id: "t-bra", fifaCode: "BRA", name: "Brasil", flagCode: "br", groupLetter: "C" },
-  { id: "t-eng", fifaCode: "ENG", name: "Inglaterra", flagCode: "gb", groupLetter: "C" },
-  { id: "t-jpn", fifaCode: "JPN", name: "Japón", flagCode: "jp", groupLetter: "C" },
-  { id: "t-sui", fifaCode: "SUI", name: "Suiza", flagCode: "ch", groupLetter: "C" },
+  team("t-bra", "BRA", "Brasil", "br", "C"),
+  team("t-eng", "ENG", "Inglaterra", "gb", "C"),
+  team("t-jpn", "JPN", "Japón", "jp", "C"),
+  team("t-sui", "SUI", "Suiza", "ch", "C"),
   // Grupo D
-  { id: "t-fra", fifaCode: "FRA", name: "Francia", flagCode: "fr", groupLetter: "D" },
-  { id: "t-ger", fifaCode: "GER", name: "Alemania", flagCode: "de", groupLetter: "D" },
-  { id: "t-por", fifaCode: "POR", name: "Portugal", flagCode: "pt", groupLetter: "D" },
-  { id: "t-col", fifaCode: "COL", name: "Colombia", flagCode: "co", groupLetter: "D" },
+  team("t-fra", "FRA", "Francia", "fr", "D"),
+  team("t-ger", "GER", "Alemania", "de", "D"),
+  team("t-por", "POR", "Portugal", "pt", "D"),
+  team("t-col", "COL", "Colombia", "co", "D"),
   // Otros equipos clasificados (grupos E-L). No mostramos sus standings en el
   // mockup pero existen para que el bracket R32 (32 equipos) tenga teams reales.
-  { id: "t-cro", fifaCode: "CRO", name: "Croacia", flagCode: "hr", groupLetter: "E" },
-  { id: "t-bel", fifaCode: "BEL", name: "Bélgica", flagCode: "be", groupLetter: "E" },
-  { id: "t-den", fifaCode: "DEN", name: "Dinamarca", flagCode: "dk", groupLetter: "F" },
-  { id: "t-pol", fifaCode: "POL", name: "Polonia", flagCode: "pl", groupLetter: "F" },
-  { id: "t-aus", fifaCode: "AUS", name: "Australia", flagCode: "au", groupLetter: "G" },
-  { id: "t-sui_alt", fifaCode: "ECU", name: "Ecuador", flagCode: "ec", groupLetter: "G" },
-  { id: "t-kor", fifaCode: "KOR", name: "Corea del Sur", flagCode: "kr", groupLetter: "H" },
-  { id: "t-irn", fifaCode: "IRN", name: "Irán", flagCode: "ir", groupLetter: "H" },
-  { id: "t-can", fifaCode: "CAN", name: "Canadá", flagCode: "ca", groupLetter: "I" },
-  { id: "t-tun", fifaCode: "TUN", name: "Túnez", flagCode: "tn", groupLetter: "I" },
-  { id: "t-nga", fifaCode: "NGA", name: "Nigeria", flagCode: "ng", groupLetter: "J" },
-  { id: "t-egy", fifaCode: "EGY", name: "Egipto", flagCode: "eg", groupLetter: "J" },
-  { id: "t-srb", fifaCode: "SRB", name: "Serbia", flagCode: "rs", groupLetter: "K" },
-  { id: "t-wal", fifaCode: "WAL", name: "Gales", flagCode: "gb-wls", groupLetter: "K" },
-  { id: "t-par", fifaCode: "PAR", name: "Paraguay", flagCode: "py", groupLetter: "L" },
-  { id: "t-tur", fifaCode: "TUR", name: "Turquía", flagCode: "tr", groupLetter: "L" },
+  team("t-cro", "CRO", "Croacia", "hr", "E"),
+  team("t-bel", "BEL", "Bélgica", "be", "E"),
+  team("t-den", "DEN", "Dinamarca", "dk", "F"),
+  team("t-pol", "POL", "Polonia", "pl", "F"),
+  team("t-aus", "AUS", "Australia", "au", "G"),
+  team("t-sui_alt", "ECU", "Ecuador", "ec", "G"),
+  team("t-kor", "KOR", "Corea del Sur", "kr", "H"),
+  team("t-irn", "IRN", "Irán", "ir", "H"),
+  team("t-can", "CAN", "Canadá", "ca", "I"),
+  team("t-tun", "TUN", "Túnez", "tn", "I"),
+  team("t-nga", "NGA", "Nigeria", "ng", "J"),
+  team("t-egy", "EGY", "Egipto", "eg", "J"),
+  team("t-srb", "SRB", "Serbia", "rs", "K"),
+  team("t-wal", "WAL", "Gales", "gb-wls", "K"),
+  team("t-par", "PAR", "Paraguay", "py", "L"),
+  team("t-tur", "TUR", "Turquía", "tr", "L"),
 ];
 
 const findTeam = (code: string) => teams.find((t) => t.fifaCode === code)!;
@@ -167,195 +201,59 @@ const now = new Date("2026-06-15T18:00:00.000-03:00");
 const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000);
 const hoursFromNow = (h: number) => new Date(now.getTime() + h * 60 * 60 * 1000);
 
-export const matches: Match[] = [
-  // ============ GRUPO A ============
-  {
-    id: "m-1",
-    homeTeam: findTeam("ARG"),
-    awayTeam: findTeam("URU"),
-    kickoffAt: hoursAgo(72),
-    venue: "MetLife Stadium, New York",
-    stage: "group",
-    groupLetter: "A",
-    status: "finished",
-    homeScore: 2,
-    awayScore: 1,
-  },
-  {
-    id: "m-2",
-    homeTeam: findTeam("MEX"),
-    awayTeam: findTeam("MAR"),
-    kickoffAt: hoursAgo(60),
-    venue: "Estadio Azteca, México DF",
-    stage: "group",
-    groupLetter: "A",
-    status: "finished",
-    homeScore: 2,
-    awayScore: 1,
-  },
-  {
-    id: "m-3",
-    homeTeam: findTeam("ARG"),
-    awayTeam: findTeam("MEX"),
-    kickoffAt: hoursFromNow(28),
-    venue: "SoFi Stadium, Los Angeles",
-    stage: "group",
-    groupLetter: "A",
-    status: "scheduled",
-    homeScore: null,
-    awayScore: null,
-  },
-
-  // ============ GRUPO B ============
-  {
-    id: "m-4",
-    homeTeam: findTeam("ESP"),
-    awayTeam: findTeam("SEN"),
-    kickoffAt: hoursAgo(48),
-    venue: "SoFi Stadium, Los Angeles",
-    stage: "group",
-    groupLetter: "B",
-    status: "finished",
-    homeScore: 3,
-    awayScore: 0,
-  },
-  {
-    id: "m-5",
-    homeTeam: findTeam("NED"),
-    awayTeam: findTeam("USA"),
-    kickoffAt: hoursAgo(36),
-    venue: "Lumen Field, Seattle",
-    stage: "group",
-    groupLetter: "B",
-    status: "finished",
-    homeScore: 2,
-    awayScore: 1,
-  },
-  {
-    id: "m-6",
-    homeTeam: findTeam("ESP"),
-    awayTeam: findTeam("NED"),
-    kickoffAt: hoursFromNow(5),
-    venue: "AT&T Stadium, Dallas",
-    stage: "group",
-    groupLetter: "B",
-    status: "scheduled",
-    homeScore: null,
-    awayScore: null,
-  },
-
-  // ============ GRUPO C ============
-  {
-    id: "m-7",
-    homeTeam: findTeam("BRA"),
-    awayTeam: findTeam("SUI"),
-    kickoffAt: hoursAgo(24),
-    venue: "Hard Rock Stadium, Miami",
-    stage: "group",
-    groupLetter: "C",
-    status: "finished",
-    homeScore: 3,
-    awayScore: 1,
-  },
-  {
-    id: "m-8",
-    homeTeam: findTeam("ENG"),
-    awayTeam: findTeam("JPN"),
-    kickoffAt: hoursAgo(1),
-    venue: "BC Place, Vancouver",
-    stage: "group",
-    groupLetter: "C",
-    status: "live",
-    homeScore: 1,
-    awayScore: 0,
-  },
-  {
-    id: "m-9",
-    homeTeam: findTeam("BRA"),
-    awayTeam: findTeam("ENG"),
-    kickoffAt: hoursFromNow(50),
-    venue: "MetLife Stadium, New York",
-    stage: "group",
-    groupLetter: "C",
-    status: "scheduled",
-    homeScore: null,
-    awayScore: null,
-  },
-
-  // ============ GRUPO D ============
-  {
-    id: "m-10",
-    homeTeam: findTeam("FRA"),
-    awayTeam: findTeam("COL"),
-    kickoffAt: hoursAgo(50),
-    venue: "Mercedes-Benz Stadium, Atlanta",
-    stage: "group",
-    groupLetter: "D",
-    status: "finished",
-    homeScore: 2,
-    awayScore: 0,
-  },
-  {
-    id: "m-11",
-    homeTeam: findTeam("GER"),
-    awayTeam: findTeam("POR"),
-    kickoffAt: hoursAgo(12),
-    venue: "Levi's Stadium, San Francisco",
-    stage: "group",
-    groupLetter: "D",
-    status: "finished",
-    homeScore: 1,
-    awayScore: 1,
-  },
-  {
-    id: "m-12",
-    homeTeam: findTeam("FRA"),
-    awayTeam: findTeam("GER"),
-    kickoffAt: hoursFromNow(2),
-    venue: "Arrowhead Stadium, Kansas City",
-    stage: "group",
-    groupLetter: "D",
-    status: "scheduled",
-    homeScore: null,
-    awayScore: null,
-  },
+export const matches: MatchWithTeams[] = [
+  // Grupo A
+  match("m-1", findTeam("ARG"), findTeam("URU"), hoursAgo(72), "MetLife Stadium, New York", "group", "A", "finished", 2, 1),
+  match("m-2", findTeam("MEX"), findTeam("MAR"), hoursAgo(60), "Estadio Azteca, México DF", "group", "A", "finished", 2, 1),
+  match("m-3", findTeam("ARG"), findTeam("MEX"), hoursFromNow(28), "SoFi Stadium, Los Angeles", "group", "A", "scheduled", null, null),
+  // Grupo B
+  match("m-4", findTeam("ESP"), findTeam("SEN"), hoursAgo(48), "SoFi Stadium, Los Angeles", "group", "B", "finished", 3, 0),
+  match("m-5", findTeam("NED"), findTeam("USA"), hoursAgo(36), "Lumen Field, Seattle", "group", "B", "finished", 2, 1),
+  match("m-6", findTeam("ESP"), findTeam("NED"), hoursFromNow(5), "AT&T Stadium, Dallas", "group", "B", "scheduled", null, null),
+  // Grupo C
+  match("m-7", findTeam("BRA"), findTeam("SUI"), hoursAgo(24), "Hard Rock Stadium, Miami", "group", "C", "finished", 3, 1),
+  match("m-8", findTeam("ENG"), findTeam("JPN"), hoursAgo(1), "BC Place, Vancouver", "group", "C", "live", 1, 0),
+  match("m-9", findTeam("BRA"), findTeam("ENG"), hoursFromNow(50), "MetLife Stadium, New York", "group", "C", "scheduled", null, null),
+  // Grupo D
+  match("m-10", findTeam("FRA"), findTeam("COL"), hoursAgo(50), "Mercedes-Benz Stadium, Atlanta", "group", "D", "finished", 2, 0),
+  match("m-11", findTeam("GER"), findTeam("POR"), hoursAgo(12), "Levi's Stadium, San Francisco", "group", "D", "finished", 1, 1),
+  match("m-12", findTeam("FRA"), findTeam("GER"), hoursFromNow(2), "Arrowhead Stadium, Kansas City", "group", "D", "scheduled", null, null),
 ];
 
 // ========== PREDICTIONS ==========
 // Pronósticos del current user (Federico) — mix de exactos, signos, errados y pendientes.
 export const userPredictions: Record<string, Prediction> = {
-  "m-1": { id: "p-1", userId: "u-fede", matchId: "m-1", homeScore: 2, awayScore: 1, points: 3 },   // exacto (ARG-URU 2-1)
-  "m-2": { id: "p-2", userId: "u-fede", matchId: "m-2", homeScore: 1, awayScore: 0, points: 1 },   // signo (MEX-MAR 2-1)
-  "m-3": { id: "p-3", userId: "u-fede", matchId: "m-3", homeScore: 2, awayScore: 1, points: null }, // scheduled
-  "m-4": { id: "p-4", userId: "u-fede", matchId: "m-4", homeScore: 2, awayScore: 0, points: 1 },   // signo (ESP-SEN 3-0)
-  "m-5": { id: "p-5", userId: "u-fede", matchId: "m-5", homeScore: 1, awayScore: 2, points: 0 },   // errado (NED-USA 2-1)
-  "m-6": { id: "p-6", userId: "u-fede", matchId: "m-6", homeScore: 1, awayScore: 1, points: null }, // scheduled
-  "m-7": { id: "p-7", userId: "u-fede", matchId: "m-7", homeScore: 3, awayScore: 1, points: 3 },   // exacto (BRA-SUI 3-1)
-  "m-8": { id: "p-8", userId: "u-fede", matchId: "m-8", homeScore: 2, awayScore: 1, points: null }, // live
-  "m-10": { id: "p-10", userId: "u-fede", matchId: "m-10", homeScore: 3, awayScore: 0, points: 1 }, // signo (FRA-COL 2-0)
-  "m-12": { id: "p-12", userId: "u-fede", matchId: "m-12", homeScore: 2, awayScore: 1, points: null }, // scheduled
-  // m-9 y m-11 sin cargar (pending)
+  "m-1": prediction("p-1", "u-fede", "m-1", 2, 1, 3),     // exacto (ARG-URU 2-1)
+  "m-2": prediction("p-2", "u-fede", "m-2", 1, 0, 1),     // signo (MEX-MAR 2-1)
+  "m-3": prediction("p-3", "u-fede", "m-3", 2, 1, null),  // scheduled
+  "m-4": prediction("p-4", "u-fede", "m-4", 2, 0, 1),     // signo (ESP-SEN 3-0)
+  "m-5": prediction("p-5", "u-fede", "m-5", 1, 2, 0),     // errado (NED-USA 2-1)
+  "m-6": prediction("p-6", "u-fede", "m-6", 1, 1, null),  // scheduled
+  "m-7": prediction("p-7", "u-fede", "m-7", 3, 1, 3),     // exacto (BRA-SUI 3-1)
+  "m-8": prediction("p-8", "u-fede", "m-8", 2, 1, null),  // live
+  "m-10": prediction("p-10", "u-fede", "m-10", 3, 0, 1),  // signo (FRA-COL 2-0)
+  "m-12": prediction("p-12", "u-fede", "m-12", 2, 1, null), // scheduled
 };
 
 // ========== OTHER USERS PREDICTIONS for match detail view ==========
 export const allPredictionsForMatch: Record<string, Array<Prediction & { user: User }>> = {
   "m-1": [
-    { id: "pa1", userId: "u-fede", matchId: "m-1", homeScore: 2, awayScore: 1, points: 3, user: users[0] },
-    { id: "pa2", userId: "u-manuel", matchId: "m-1", homeScore: 2, awayScore: 0, points: 1, user: users[1] },
-    { id: "pa3", userId: "u-juan", matchId: "m-1", homeScore: 1, awayScore: 2, points: 0, user: users[2] },
-    { id: "pa4", userId: "u-diego", matchId: "m-1", homeScore: 1, awayScore: 1, points: 0, user: users[3] },
-    { id: "pa5", userId: "u-pablo", matchId: "m-1", homeScore: 3, awayScore: 1, points: 1, user: users[4] },
-    { id: "pa6", userId: "u-tomas", matchId: "m-1", homeScore: 2, awayScore: 1, points: 3, user: users[5] },
-    { id: "pa7", userId: "u-nico", matchId: "m-1", homeScore: 2, awayScore: 2, points: 0, user: users[6] },
-    { id: "pa8", userId: "u-mateo", matchId: "m-1", homeScore: 1, awayScore: 0, points: 1, user: users[7] },
+    { ...prediction("pa1", "u-fede", "m-1", 2, 1, 3), user: users[0] },
+    { ...prediction("pa2", "u-manuel", "m-1", 2, 0, 1), user: users[1] },
+    { ...prediction("pa3", "u-juan", "m-1", 1, 2, 0), user: users[2] },
+    { ...prediction("pa4", "u-diego", "m-1", 1, 1, 0), user: users[3] },
+    { ...prediction("pa5", "u-pablo", "m-1", 3, 1, 1), user: users[4] },
+    { ...prediction("pa6", "u-tomas", "m-1", 2, 1, 3), user: users[5] },
+    { ...prediction("pa7", "u-nico", "m-1", 2, 2, 0), user: users[6] },
+    { ...prediction("pa8", "u-mateo", "m-1", 1, 0, 1), user: users[7] },
   ],
   "m-8": [
-    { id: "pl1", userId: "u-fede", matchId: "m-8", homeScore: 2, awayScore: 1, points: null, user: users[0] },
-    { id: "pl2", userId: "u-manuel", matchId: "m-8", homeScore: 1, awayScore: 0, points: null, user: users[1] },
-    { id: "pl3", userId: "u-juan", matchId: "m-8", homeScore: 3, awayScore: 1, points: null, user: users[2] },
-    { id: "pl4", userId: "u-diego", matchId: "m-8", homeScore: 1, awayScore: 1, points: null, user: users[3] },
-    { id: "pl5", userId: "u-tomas", matchId: "m-8", homeScore: 2, awayScore: 0, points: null, user: users[5] },
-    { id: "pl6", userId: "u-mateo", matchId: "m-8", homeScore: 0, awayScore: 1, points: null, user: users[7] },
+    { ...prediction("pl1", "u-fede", "m-8", 2, 1, null), user: users[0] },
+    { ...prediction("pl2", "u-manuel", "m-8", 1, 0, null), user: users[1] },
+    { ...prediction("pl3", "u-juan", "m-8", 3, 1, null), user: users[2] },
+    { ...prediction("pl4", "u-diego", "m-8", 1, 1, null), user: users[3] },
+    { ...prediction("pl5", "u-tomas", "m-8", 2, 0, null), user: users[5] },
+    { ...prediction("pl6", "u-mateo", "m-8", 0, 1, null), user: users[7] },
   ],
 };
 

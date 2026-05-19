@@ -3,7 +3,7 @@
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TeamLabel } from "@/components/common/team-label";
-import type { Team } from "@/lib/mock-data";
+import type { Team } from "@/lib/types";
 
 type ScoreInputProps = {
   homeTeam: Team;

@@ -1,11 +1,15 @@
-import { matches, userPredictions } from "@/lib/mock-data";
+import { getAllMatchesWithTeams } from "@/server/queries/matches";
 import { MatchCard } from "@/components/match/match-card";
 import { EditableMatchCard } from "@/components/match/editable-match-card";
 
-export default function MatchesPage() {
+export default async function MatchesPage() {
+  const matches = await getAllMatchesWithTeams();
   const live = matches.filter((m) => m.status === "live");
   const finished = matches.filter((m) => m.status === "finished");
   const upcoming = matches.filter((m) => m.status === "scheduled");
+
+  // userPredictions vendrá de queries en próxima iteración. Por ahora vacío.
+  const userPredictions: Record<string, never> = {};
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 space-y-8">

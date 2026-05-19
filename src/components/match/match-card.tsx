@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Match, Prediction } from "@/lib/mock-data";
+import type { MatchWithTeams, Prediction } from "@/lib/types";
 import { TeamLabel } from "@/components/common/team-label";
 import { StatusBadge } from "@/components/common/status-badge";
 
 type MatchCardProps = {
-  match: Match;
+  match: MatchWithTeams;
   userPrediction?: Prediction;
   href?: string;
 };
@@ -24,7 +24,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat("es-AR", {
 });
 
 function getPredictionStatus(
-  match: Match,
+  match: MatchWithTeams,
   prediction: Prediction | undefined,
 ): "exact" | "sign" | "wrong" | "pending" | "loaded" {
   if (!prediction) return "pending";
@@ -118,9 +118,13 @@ export function MatchCard({ match, userPrediction, href }: MatchCardProps) {
           </>
         ) : (
           <>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              <span className="truncate">{match.venue}</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
+              {match.venue && (
+                <>
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{match.venue}</span>
+                </>
+              )}
             </span>
             <StatusBadge status="pending" />
           </>
@@ -144,7 +148,7 @@ function TeamRow({
   score,
   showResult,
 }: {
-  team: Match["homeTeam"];
+  team: MatchWithTeams["homeTeam"];
   score: number | null;
   showResult: boolean;
 }) {

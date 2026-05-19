@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   char,
@@ -371,6 +371,117 @@ export const sentNotifications = pgTable(
   (t) => [
     unique("sent_notifications_unique").on(t.userId, t.kind, t.referenceId),
   ],
+);
+
+// ============================================================
+// Relations — necesarias para queries `with: { ... }` de Drizzle
+// ============================================================
+
+export const usersRelations = relations(users, ({ one, many }) => ({
+  favoriteTeam: one(teams, {
+    fields: [users.favoriteTeamId],
+    references: [teams.id],
+  }),
+  accounts: many(accounts),
+  predictions: many(predictions),
+  specialPredictions: one(specialPredictions),
+  payment: one(payments),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const teamsRelations = relations(teams, ({ many }) => ({
+  homeMatches: many(matches, { relationName: "homeMatches" }),
+  awayMatches: many(matches, { relationName: "awayMatches" }),
+  players: many(players),
+}));
+
+export const playersRelations = relations(players, ({ one }) => ({
+  team: one(teams, {
+    fields: [players.teamId],
+    references: [teams.id],
+  }),
+}));
+
+export const matchesRelations = relations(matches, ({ one, many }) => ({
+  homeTeam: one(teams, {
+    fields: [matches.homeTeamId],
+    references: [teams.id],
+    relationName: "homeMatches",
+  }),
+  awayTeam: one(teams, {
+    fields: [matches.awayTeamId],
+    references: [teams.id],
+    relationName: "awayMatches",
+  }),
+  predictions: many(predictions),
+}));
+
+export const predictionsRelations = relations(predictions, ({ one }) => ({
+  user: one(users, {
+    fields: [predictions.userId],
+    references: [users.id],
+  }),
+  match: one(matches, {
+    fields: [predictions.matchId],
+    references: [matches.id],
+  }),
+}));
+
+export const specialPredictionsRelations = relations(
+  specialPredictions,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [specialPredictions.userId],
+      references: [users.id],
+    }),
+    championTeam: one(teams, {
+      fields: [specialPredictions.championTeamId],
+      references: [teams.id],
+    }),
+    runnerUpTeam: one(teams, {
+      fields: [specialPredictions.runnerUpTeamId],
+      references: [teams.id],
+    }),
+    thirdPlaceTeam: one(teams, {
+      fields: [specialPredictions.thirdPlaceTeamId],
+      references: [teams.id],
+    }),
+    topScorerPlayer: one(players, {
+      fields: [specialPredictions.topScorerPlayerId],
+      references: [players.id],
+    }),
+    bestPlayer: one(players, {
+      fields: [specialPredictions.bestPlayerId],
+      references: [players.id],
+    }),
+    mostGoalsTeam: one(teams, {
+      fields: [specialPredictions.mostGoalsTeamId],
+      references: [teams.id],
+    }),
+  }),
+);
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  user: one(users, {
+    fields: [payments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const sentNotificationsRelations = relations(
+  sentNotifications,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [sentNotifications.userId],
+      references: [users.id],
+    }),
+  }),
 );
 
 // ============================================================
