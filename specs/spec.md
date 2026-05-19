@@ -67,6 +67,14 @@ Todos los bonus son **objetivos** (los define FIFA al final del torneo o se calc
 - 0 pts: signo errado
 - Bonus de pronósticos especiales se suman al cierre del torneo
 
+**Agenda / partidos por día**
+- Vista cronológica: partidos agrupados por **fecha en horario Argentina** (GMT-3)
+- Cada día muestra los partidos en orden de horario
+- Badge "HOY" en la sección del día actual (en ART)
+- Badge "EN VIVO" en la sección si hay algún partido jugándose ahora
+- **Auto-refresh a las 00:00 ART**: el contenido de "hoy" cambia automáticamente al día siguiente sin que el usuario tenga que hacer nada
+- Implementación: Cache Components con `cacheLife` calibrado para expirar a las 00:00 ART, o cron `revalidateTag('agenda')` corriendo a las 00:00 ART
+
 **Tabla de posiciones**
 - Ranking general en tiempo real
 - Ranking por fase (grupos / octavos / cuartos / semis / final)

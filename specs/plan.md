@@ -259,8 +259,11 @@ tournament_config (singleton, sin FKs salvo en bonusResults.jsonb)
 | `/predict/[matchId]` | RSC + client form | Detalle + form de un partido |
 | `/specials` | RSC + client form | 6 picks pre-torneo (lockeado tras kickoff inicial) |
 | `/leaderboard` | RSC + Cache Components | Tabla completa con filtros |
-| `/matches` | RSC + Cache Components | Lista de partidos por fase/fecha |
+| `/agenda` | RSC + Cache Components | **Agenda cronológica:** partidos agrupados por fecha ART. Auto-refresh a las 00:00 ART (cron + `revalidateTag('agenda')` o `cacheLife` alineado a medianoche) |
+| `/matches` | RSC + Cache Components | Lista de partidos por estado (live/proximos/finalizados) |
 | `/matches/[matchId]` | RSC + Cache Components | Detalle: score + pronósticos de todos (post-kickoff) |
+| `/groups` | RSC + Cache Components | Grid de cards por grupo con standings. Cards clickeables |
+| `/groups/[letter]` | RSC + Cache Components | Detalle de un grupo: standings + partidos del grupo |
 | `/profile` | RSC + client form | Editar nombre, equipo fav, opt-out de mails, theme |
 
 ### 2.3 Admin (autenticado + email = ADMIN_EMAIL)

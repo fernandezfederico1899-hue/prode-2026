@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListChecks, Trophy, Calendar, User, LayoutGrid } from "lucide-react";
+import { Home, ListChecks, Trophy, CalendarDays, User, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/predict", label: "Pronósticos", icon: ListChecks },
   { href: "/groups", label: "Grupos", icon: LayoutGrid },
+  { href: "/agenda", label: "Agenda", icon: CalendarDays },
   { href: "/leaderboard", label: "Tabla", icon: Trophy },
-  { href: "/matches", label: "Partidos", icon: Calendar },
   { href: "/profile", label: "Perfil", icon: User },
 ];
 

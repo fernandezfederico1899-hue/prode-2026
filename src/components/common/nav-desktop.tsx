@@ -9,8 +9,8 @@ const items = [
   { href: "/", label: "Inicio" },
   { href: "/predict", label: "Pronósticos" },
   { href: "/groups", label: "Grupos" },
+  { href: "/agenda", label: "Agenda" },
   { href: "/leaderboard", label: "Tabla" },
-  { href: "/matches", label: "Partidos" },
   { href: "/profile", label: "Perfil" },
 ];
 
