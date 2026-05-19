@@ -109,7 +109,7 @@ export function MatchCard({ match, userPrediction, href }: MatchCardProps) {
         {userPrediction ? (
           <>
             <span className="text-sm text-muted-foreground">
-              Tu prono:{" "}
+              Tu pronóstico:{" "}
               <span className="font-bold text-foreground tabular-nums">
                 {userPrediction.homeScore}-{userPrediction.awayScore}
               </span>

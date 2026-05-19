@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/common/theme-toggle";
 const items = [
   { href: "/", label: "Inicio" },
   { href: "/predict", label: "Pronósticos" },
+  { href: "/groups", label: "Grupos" },
   { href: "/leaderboard", label: "Tabla" },
   { href: "/matches", label: "Partidos" },
   { href: "/profile", label: "Perfil" },

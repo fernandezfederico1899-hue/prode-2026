@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListChecks, Trophy, Calendar, User } from "lucide-react";
+import { Home, ListChecks, Trophy, Calendar, User, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Inicio", icon: Home },
-  { href: "/predict", label: "Pronós", icon: ListChecks },
+  { href: "/predict", label: "Pronósticos", icon: ListChecks },
+  { href: "/groups", label: "Grupos", icon: LayoutGrid },
   { href: "/leaderboard", label: "Tabla", icon: Trophy },
   { href: "/matches", label: "Partidos", icon: Calendar },
   { href: "/profile", label: "Perfil", icon: User },
@@ -29,14 +30,16 @@ export function NavMobile() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-2 min-h-[60px] text-xs font-semibold",
+                  "flex flex-col items-center justify-center gap-1 py-2 min-h-[60px] text-[10px] font-semibold",
                   active
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="uppercase tracking-wide">{item.label}</span>
+                <Icon className="w-5 h-5 shrink-0" />
+                <span className="uppercase tracking-wide truncate max-w-full px-1">
+                  {item.label}
+                </span>
               </Link>
             </li>
           );

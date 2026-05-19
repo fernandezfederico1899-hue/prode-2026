@@ -66,19 +66,28 @@ export type LeaderboardEntry = {
 };
 
 // ========== TEAMS ==========
+// 16 teams = 4 grupos de 4 para el mockup (en producción serán 48 / 12 grupos).
 export const teams: Team[] = [
+  // Grupo A
   { id: "t-arg", fifaCode: "ARG", name: "Argentina", flagCode: "ar", groupLetter: "A" },
-  { id: "t-bra", fifaCode: "BRA", name: "Brasil", flagCode: "br", groupLetter: "C" },
-  { id: "t-fra", fifaCode: "FRA", name: "Francia", flagCode: "fr", groupLetter: "D" },
-  { id: "t-esp", fifaCode: "ESP", name: "España", flagCode: "es", groupLetter: "B" },
-  { id: "t-eng", fifaCode: "ENG", name: "Inglaterra", flagCode: "gb", groupLetter: "F" },
-  { id: "t-ger", fifaCode: "GER", name: "Alemania", flagCode: "de", groupLetter: "E" },
+  { id: "t-mex", fifaCode: "MEX", name: "México", flagCode: "mx", groupLetter: "A" },
+  { id: "t-mar", fifaCode: "MAR", name: "Marruecos", flagCode: "ma", groupLetter: "A" },
   { id: "t-uru", fifaCode: "URU", name: "Uruguay", flagCode: "uy", groupLetter: "A" },
-  { id: "t-mex", fifaCode: "MEX", name: "México", flagCode: "mx", groupLetter: "G" },
+  // Grupo B
+  { id: "t-esp", fifaCode: "ESP", name: "España", flagCode: "es", groupLetter: "B" },
   { id: "t-usa", fifaCode: "USA", name: "Estados Unidos", flagCode: "us", groupLetter: "B" },
-  { id: "t-jpn", fifaCode: "JPN", name: "Japón", flagCode: "jp", groupLetter: "H" },
-  { id: "t-mar", fifaCode: "MAR", name: "Marruecos", flagCode: "ma", groupLetter: "I" },
-  { id: "t-por", fifaCode: "POR", name: "Portugal", flagCode: "pt", groupLetter: "K" },
+  { id: "t-ned", fifaCode: "NED", name: "Países Bajos", flagCode: "nl", groupLetter: "B" },
+  { id: "t-sen", fifaCode: "SEN", name: "Senegal", flagCode: "sn", groupLetter: "B" },
+  // Grupo C
+  { id: "t-bra", fifaCode: "BRA", name: "Brasil", flagCode: "br", groupLetter: "C" },
+  { id: "t-eng", fifaCode: "ENG", name: "Inglaterra", flagCode: "gb", groupLetter: "C" },
+  { id: "t-jpn", fifaCode: "JPN", name: "Japón", flagCode: "jp", groupLetter: "C" },
+  { id: "t-sui", fifaCode: "SUI", name: "Suiza", flagCode: "ch", groupLetter: "C" },
+  // Grupo D
+  { id: "t-fra", fifaCode: "FRA", name: "Francia", flagCode: "fr", groupLetter: "D" },
+  { id: "t-ger", fifaCode: "GER", name: "Alemania", flagCode: "de", groupLetter: "D" },
+  { id: "t-por", fifaCode: "POR", name: "Portugal", flagCode: "pt", groupLetter: "D" },
+  { id: "t-col", fifaCode: "COL", name: "Colombia", flagCode: "co", groupLetter: "D" },
 ];
 
 const findTeam = (code: string) => teams.find((t) => t.fifaCode === code)!;
@@ -249,6 +258,65 @@ export const leaderboard: LeaderboardEntry[] = [
   { user: users[4], rank: 9, isTied: false, totalPoints: 0, exactCount: 0, signCount: 0, wrongCount: 4, hasPaid: true },
   { user: users[9], rank: 10, isTied: false, totalPoints: 0, exactCount: 0, signCount: 0, wrongCount: 4, hasPaid: true },
 ];
+
+// ========== GROUP STANDINGS ==========
+// Stats agregadas por equipo dentro de su grupo (mockeadas).
+export type GroupStanding = {
+  team: Team;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  points: number;
+};
+
+const stand = (
+  fifaCode: string,
+  played: number,
+  wins: number,
+  draws: number,
+  losses: number,
+  goalsFor: number,
+  goalsAgainst: number,
+): GroupStanding => ({
+  team: findTeam(fifaCode),
+  played,
+  wins,
+  draws,
+  losses,
+  goalsFor,
+  goalsAgainst,
+  points: wins * 3 + draws,
+});
+
+export const groupStandings: Record<string, GroupStanding[]> = {
+  A: [
+    stand("ARG", 3, 2, 1, 0, 5, 2),
+    stand("MEX", 3, 2, 0, 1, 4, 3),
+    stand("MAR", 3, 1, 0, 2, 3, 4),
+    stand("URU", 3, 0, 1, 2, 2, 5),
+  ],
+  B: [
+    stand("ESP", 3, 3, 0, 0, 7, 1),
+    stand("NED", 3, 2, 0, 1, 4, 2),
+    stand("USA", 3, 1, 0, 2, 2, 5),
+    stand("SEN", 3, 0, 0, 3, 1, 6),
+  ],
+  C: [
+    stand("BRA", 3, 2, 1, 0, 6, 2),
+    stand("ENG", 3, 2, 0, 1, 5, 3),
+    stand("JPN", 3, 0, 2, 1, 2, 3),
+    stand("SUI", 3, 0, 1, 2, 1, 6),
+  ],
+  D: [
+    stand("FRA", 3, 2, 1, 0, 5, 2),
+    stand("GER", 3, 2, 0, 1, 4, 3),
+    stand("POR", 3, 1, 1, 1, 3, 3),
+    stand("COL", 3, 0, 0, 3, 1, 5),
+  ],
+};
 
 // ========== TOURNAMENT CONFIG ==========
 export const tournamentConfig = {
