@@ -12,8 +12,8 @@ const submitSchema = z.object({
   runnerUpTeamId: z.string().uuid().nullable(),
   thirdPlaceTeamId: z.string().uuid().nullable(),
   mostGoalsTeamId: z.string().uuid().nullable(),
-  // topScorerPlayerId y bestPlayerId quedan pendientes hasta que tengamos
-  // tabla players seedeada con la lista oficial.
+  topScorerPlayerId: z.string().uuid().nullable(),
+  bestPlayerId: z.string().uuid().nullable(),
 });
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
@@ -48,6 +48,8 @@ export async function submitSpecialPicksAction(
       runnerUpTeamId: parsed.data.runnerUpTeamId,
       thirdPlaceTeamId: parsed.data.thirdPlaceTeamId,
       mostGoalsTeamId: parsed.data.mostGoalsTeamId,
+      topScorerPlayerId: parsed.data.topScorerPlayerId,
+      bestPlayerId: parsed.data.bestPlayerId,
     })
     .onConflictDoUpdate({
       target: specialPredictions.userId,
@@ -56,6 +58,8 @@ export async function submitSpecialPicksAction(
         runnerUpTeamId: parsed.data.runnerUpTeamId,
         thirdPlaceTeamId: parsed.data.thirdPlaceTeamId,
         mostGoalsTeamId: parsed.data.mostGoalsTeamId,
+        topScorerPlayerId: parsed.data.topScorerPlayerId,
+        bestPlayerId: parsed.data.bestPlayerId,
         updatedAt: new Date(),
       },
     });

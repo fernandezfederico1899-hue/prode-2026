@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { AlertCircle, Check, Lock } from "lucide-react";
 import type { Team } from "@/lib/types";
+import type { PlayerWithTeam } from "@/server/queries/players";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,8 @@ type Picks = {
   runnerUpTeamId: string | null;
   thirdPlaceTeamId: string | null;
   mostGoalsTeamId: string | null;
+  topScorerPlayerId: string | null;
+  bestPlayerId: string | null;
 };
 
 const TEAM_FIELDS: Array<{
@@ -30,12 +33,23 @@ const TEAM_FIELDS: Array<{
   { key: "mostGoalsTeamId", label: "País más goleador", points: 5 },
 ];
 
+const PLAYER_FIELDS: Array<{
+  key: keyof Picks;
+  label: string;
+  points: number;
+}> = [
+  { key: "topScorerPlayerId", label: "Goleador (Bota de Oro)", points: 15 },
+  { key: "bestPlayerId", label: "Mejor jugador (Balón de Oro)", points: 10 },
+];
+
 export function SpecialPicksForm({
   teams,
+  players,
   initialPicks,
   locked,
 }: {
   teams: Team[];
+  players: PlayerWithTeam[];
   initialPicks: Picks;
   locked: boolean;
 }) {
@@ -45,7 +59,12 @@ export function SpecialPicksForm({
   const [isPending, startTransition] = useTransition();
 
   const teamsSorted = [...teams].sort((a, b) => a.name.localeCompare(b.name));
-  const totalMax = TEAM_FIELDS.reduce((acc, f) => acc + f.points, 0);
+  const playersSorted = [...players].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  const totalMax =
+    TEAM_FIELDS.reduce((acc, f) => acc + f.points, 0) +
+    PLAYER_FIELDS.reduce((acc, f) => acc + f.points, 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +87,7 @@ export function SpecialPicksForm({
     >
       <div className="grid gap-5">
         {TEAM_FIELDS.map((field) => (
-          <PickField
+          <TeamPickField
             key={field.key}
             label={field.label}
             points={field.points}
@@ -81,12 +100,19 @@ export function SpecialPicksForm({
           />
         ))}
 
-        {/* Goleador y mejor jugador: pendientes (necesitan tabla players seedeada) */}
-        <div className="rounded-md border-2 border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-          <strong>Goleador (+15)</strong> y <strong>Mejor jugador (+10)</strong>{" "}
-          se habilitan antes del kickoff cuando carguemos la lista oficial de
-          jugadores.
-        </div>
+        {PLAYER_FIELDS.map((field) => (
+          <PlayerPickField
+            key={field.key}
+            label={field.label}
+            points={field.points}
+            value={picks[field.key]}
+            onChange={(v) =>
+              setPicks((prev) => ({ ...prev, [field.key]: v }))
+            }
+            disabled={locked || isPending}
+            options={playersSorted}
+          />
+        ))}
       </div>
 
       <div className="border-t border-border pt-6">
@@ -135,7 +161,7 @@ export function SpecialPicksForm({
   );
 }
 
-function PickField({
+function TeamPickField({
   label,
   points,
   value,
@@ -151,16 +177,7 @@ function PickField({
   options: Team[];
 }) {
   return (
-    <div>
-      <div className="flex items-baseline justify-between mb-2">
-        <label className="font-bold uppercase tracking-wide text-sm">
-          {label}
-        </label>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md border-2 border-accent bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider tabular-nums">
-          +{points} pts
-        </span>
-      </div>
-
+    <FieldShell label={label} points={points}>
       <Select
         value={value ?? undefined}
         onValueChange={onChange}
@@ -188,6 +205,76 @@ function PickField({
           ))}
         </SelectContent>
       </Select>
+    </FieldShell>
+  );
+}
+
+function PlayerPickField({
+  label,
+  points,
+  value,
+  onChange,
+  disabled,
+  options,
+}: {
+  label: string;
+  points: number;
+  value: string | null;
+  onChange: (v: string | null) => void;
+  disabled: boolean;
+  options: PlayerWithTeam[];
+}) {
+  return (
+    <FieldShell label={label} points={points}>
+      <Select
+        value={value ?? undefined}
+        onValueChange={onChange}
+        disabled={disabled}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Elegí un jugador..." />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((p) => (
+            <SelectItem key={p.id} value={p.id}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://flagcdn.com/${p.team.flagCode}.svg`}
+                alt=""
+                className="w-5 h-[15px] rounded-sm border border-border object-cover"
+              />
+              <span className="font-semibold">{p.name}</span>
+              <span className="ml-auto text-xs text-muted-foreground">
+                {p.team.fifaCode} · {p.position}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </FieldShell>
+  );
+}
+
+function FieldShell({
+  label,
+  points,
+  children,
+}: {
+  label: string;
+  points: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-2">
+        <label className="font-bold uppercase tracking-wide text-sm">
+          {label}
+        </label>
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md border-2 border-accent bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider tabular-nums">
+          +{points} pts
+        </span>
+      </div>
+      {children}
     </div>
   );
 }

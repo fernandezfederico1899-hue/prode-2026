@@ -13,7 +13,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:check": "drizzle-kit check",
-    "db:seed": "tsx --env-file=.env.local src/db/seed.ts"
+    "db:seed": "tsx --env-file=.env.local src/db/seed.ts",
+    "db:seed-players": "tsx --env-file=.env.local src/db/seed-players.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { GroupStanding } from "@/lib/mock-data";
+import type { GroupStanding } from "@/server/queries/standings";
 import { TeamLabel } from "@/components/common/team-label";
 
 export function GroupCard({
