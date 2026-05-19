@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
       // flagcdn (banderas)
       { protocol: "https", hostname: "flagcdn.com" },
+      // API-Sports player photos
+      { protocol: "https", hostname: "media.api-sports.io" },
     ],
   },
 };

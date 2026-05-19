@@ -141,6 +141,7 @@ export const teams = pgTable(
     flagCode: text("flag_code").notNull(), // ISO 3166-1 alpha-2 lowercase: 'ar', 'br'
     openfootballName: text("openfootball_name").notNull(),
     apiSportsId: integer("api_sports_id").unique(),
+    rosterSyncedAt: timestamp("roster_synced_at", { withTimezone: true }),
     groupLetter: char("group_letter", { length: 1 }), // 'A'..'L'
   },
   (t) => [
@@ -164,6 +165,9 @@ export const players = pgTable(
       .references(() => teams.id, { onDelete: "cascade" })
       .notNull(),
     position: text("position"),
+    photoUrl: text("photo_url"),
+    shirtNumber: smallint("shirt_number"),
+    age: smallint("age"),
   },
   (t) => [
     index("players_name_idx").on(t.name),
@@ -181,12 +185,20 @@ export const matches = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     openfootballMatchId: text("openfootball_match_id").unique(),
     apiSportsFixtureId: integer("api_sports_fixture_id").unique(),
-    homeTeamId: uuid("home_team_id")
-      .references(() => teams.id)
-      .notNull(),
-    awayTeamId: uuid("away_team_id")
-      .references(() => teams.id)
-      .notNull(),
+    // En partidos de KO antes de definir cruces, los teams son nullable y se
+    // representan con slots ("1A", "2B", "3A/B/C/D/F") hasta que se resuelven.
+    homeTeamId: uuid("home_team_id").references(() => teams.id),
+    awayTeamId: uuid("away_team_id").references(() => teams.id),
+    homeSlot: text("home_slot"),
+    awaySlot: text("away_slot"),
+    // Para KO post-R32: de qué match KO anterior viene el equipo y si es
+    // el ganador (W) o perdedor (L = solo para 3er puesto).
+    homeSourceMatchNum: smallint("home_source_match_num"),
+    awaySourceMatchNum: smallint("away_source_match_num"),
+    homeSourceOutcome: text("home_source_outcome"), // 'W' | 'L'
+    awaySourceOutcome: text("away_source_outcome"),
+    // Número del match en openfootball (73-104 para los KO).
+    matchNum: smallint("match_num"),
     kickoffAt: timestamp("kickoff_at", { withTimezone: true }).notNull(),
     venue: text("venue"),
     stage: matchStage("stage").notNull(),

@@ -1,0 +1,1 @@
+ALTER TABLE "teams" ADD COLUMN "roster_synced_at" timestamp with time zone;

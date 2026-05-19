@@ -1,0 +1,242 @@
+{
+  "Algeria": {
+    "id": 1532,
+    "name": "Algeria",
+    "country": "Algeria"
+  },
+  "Argentina": {
+    "id": 26,
+    "name": "Argentina",
+    "country": "Argentina"
+  },
+  "Australia": {
+    "id": 20,
+    "name": "Australia",
+    "country": "Australia"
+  },
+  "Austria": {
+    "id": 775,
+    "name": "Austria",
+    "country": "Austria"
+  },
+  "Belgium": {
+    "id": 1,
+    "name": "Belgium",
+    "country": "Belgium"
+  },
+  "Brazil": {
+    "id": 6,
+    "name": "Brazil",
+    "country": "Brazil"
+  },
+  "Canada": {
+    "id": 5529,
+    "name": "Canada",
+    "country": "Canada"
+  },
+  "Colombia": {
+    "id": 8,
+    "name": "Colombia",
+    "country": "Colombia"
+  },
+  "Croatia": {
+    "id": 3,
+    "name": "Croatia",
+    "country": "Croatia"
+  },
+  "Curaçao": {
+    "id": 5530,
+    "name": "Curaçao",
+    "country": "Curacao"
+  },
+  "Ecuador": {
+    "id": 2382,
+    "name": "Ecuador",
+    "country": "Ecuador"
+  },
+  "Egypt": {
+    "id": 32,
+    "name": "Egypt",
+    "country": "Egypt"
+  },
+  "England": {
+    "id": 10,
+    "name": "England",
+    "country": "England"
+  },
+  "France": {
+    "id": 2,
+    "name": "France",
+    "country": "France"
+  },
+  "Germany": {
+    "id": 25,
+    "name": "Germany",
+    "country": "Germany"
+  },
+  "Ghana": {
+    "id": 1504,
+    "name": "Ghana",
+    "country": "Ghana"
+  },
+  "Haiti": {
+    "id": 2386,
+    "name": "Haiti",
+    "country": "Haiti"
+  },
+  "Iran": {
+    "id": 22,
+    "name": "Iran",
+    "country": "Iran"
+  },
+  "Iraq": {
+    "id": 1567,
+    "name": "Iraq",
+    "country": "Iraq"
+  },
+  "Japan": {
+    "id": 12,
+    "name": "Japan",
+    "country": "Japan"
+  },
+  "Jordan": {
+    "id": 1548,
+    "name": "Jordan",
+    "country": "Jordan"
+  },
+  "Mexico": {
+    "id": 16,
+    "name": "Mexico",
+    "country": "Mexico"
+  },
+  "Morocco": {
+    "id": 31,
+    "name": "Morocco",
+    "country": "Morocco"
+  },
+  "Netherlands": {
+    "id": 1118,
+    "name": "Netherlands",
+    "country": "Netherlands"
+  },
+  "Norway": {
+    "id": 1090,
+    "name": "Norway",
+    "country": "Norway"
+  },
+  "Panama": {
+    "id": 11,
+    "name": "Panama",
+    "country": "Panama"
+  },
+  "Paraguay": {
+    "id": 2380,
+    "name": "Paraguay",
+    "country": "Paraguay"
+  },
+  "Portugal": {
+    "id": 27,
+    "name": "Portugal",
+    "country": "Portugal"
+  },
+  "Qatar": {
+    "id": 1569,
+    "name": "Qatar",
+    "country": "Qatar"
+  },
+  "Scotland": {
+    "id": 1108,
+    "name": "Scotland",
+    "country": "Scotland"
+  },
+  "Senegal": {
+    "id": 13,
+    "name": "Senegal",
+    "country": "Senegal"
+  },
+  "Bosnia & Herzegovina": {
+    "id": 1113,
+    "name": "Bosnia & Herzegovina",
+    "country": "Bosnia"
+  },
+  "Cape Verde": {
+    "id": 1533,
+    "name": "Cape Verde Islands",
+    "country": "Cape-Verde-Islands"
+  },
+  "DR Congo": {
+    "id": 1508,
+    "name": "Congo DR",
+    "country": "Congo-DR"
+  },
+  "Ivory Coast": {
+    "id": 19129,
+    "name": "Côte d'Ivoire",
+    "country": "Ivory-Coast"
+  },
+  "New Zealand": {
+    "id": 4673,
+    "name": "New Zealand",
+    "country": "New-Zealand"
+  },
+  "Saudi Arabia": {
+    "id": 23,
+    "name": "Saudi Arabia",
+    "country": "Saudi-Arabia"
+  },
+  "South Africa": {
+    "id": 1531,
+    "name": "South Africa",
+    "country": "South-Africa"
+  },
+  "Spain": {
+    "id": 9,
+    "name": "Spain",
+    "country": "Spain"
+  },
+  "Sweden": {
+    "id": 5,
+    "name": "Sweden",
+    "country": "Sweden"
+  },
+  "Switzerland": {
+    "id": 15,
+    "name": "Switzerland",
+    "country": "Switzerland"
+  },
+  "Tunisia": {
+    "id": 28,
+    "name": "Tunisia",
+    "country": "Tunisia"
+  },
+  "Turkey": {
+    "id": 777,
+    "name": "Türkiye",
+    "country": "Turkey"
+  },
+  "Uruguay": {
+    "id": 7,
+    "name": "Uruguay",
+    "country": "Uruguay"
+  },
+  "Uzbekistan": {
+    "id": 1568,
+    "name": "Uzbekistan",
+    "country": "Uzbekistan"
+  },
+  "Czech Republic": {
+    "id": 770,
+    "name": "Czech Republic",
+    "country": "Czech-Republic"
+  },
+  "South Korea": {
+    "id": 17,
+    "name": "South Korea",
+    "country": "South-Korea"
+  },
+  "USA": {
+    "id": 2384,
+    "name": "USA",
+    "country": "USA"
+  }
+}
