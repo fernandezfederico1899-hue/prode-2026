@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shield } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
 import { currentUser } from "@/lib/mock-data";
 import { TeamLabel } from "@/components/common/team-label";
 import { ThemeToggle } from "@/components/common/theme-toggle";
@@ -69,6 +69,16 @@ export default function ProfilePage() {
             </div>
           </div>
           <span className="text-secondary font-bold">→</span>
+        </div>
+      </Link>
+
+      <Link
+        href="/login"
+        className="block rounded-xl border-2 border-border bg-card p-4 hover:bg-muted transition-colors"
+      >
+        <div className="flex items-center gap-3 text-destructive">
+          <LogOut className="w-5 h-5" />
+          <span className="font-bold uppercase tracking-wide">Cerrar sesión</span>
         </div>
       </Link>
 

@@ -15,8 +15,11 @@ const items = [
   { href: "/profile", label: "Perfil" },
 ];
 
+const HIDDEN_ON = ["/login", "/pending", "/rejected"];
+
 export function NavDesktop() {
   const pathname = usePathname();
+  if (HIDDEN_ON.includes(pathname)) return null;
 
   return (
     <header className="hidden md:block sticky top-0 z-40 bg-card border-b-2 border-border">

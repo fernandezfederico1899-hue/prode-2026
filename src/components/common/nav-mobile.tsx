@@ -14,8 +14,11 @@ const items = [
   { href: "/profile", label: "Perfil", icon: User },
 ];
 
+const HIDDEN_ON = ["/login", "/pending", "/rejected"];
+
 export function NavMobile() {
   const pathname = usePathname();
+  if (HIDDEN_ON.includes(pathname)) return null;
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t-2 border-border">
