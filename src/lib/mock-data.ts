@@ -88,6 +88,24 @@ export const teams: Team[] = [
   { id: "t-ger", fifaCode: "GER", name: "Alemania", flagCode: "de", groupLetter: "D" },
   { id: "t-por", fifaCode: "POR", name: "Portugal", flagCode: "pt", groupLetter: "D" },
   { id: "t-col", fifaCode: "COL", name: "Colombia", flagCode: "co", groupLetter: "D" },
+  // Otros equipos clasificados (grupos E-L). No mostramos sus standings en el
+  // mockup pero existen para que el bracket R32 (32 equipos) tenga teams reales.
+  { id: "t-cro", fifaCode: "CRO", name: "Croacia", flagCode: "hr", groupLetter: "E" },
+  { id: "t-bel", fifaCode: "BEL", name: "Bélgica", flagCode: "be", groupLetter: "E" },
+  { id: "t-den", fifaCode: "DEN", name: "Dinamarca", flagCode: "dk", groupLetter: "F" },
+  { id: "t-pol", fifaCode: "POL", name: "Polonia", flagCode: "pl", groupLetter: "F" },
+  { id: "t-aus", fifaCode: "AUS", name: "Australia", flagCode: "au", groupLetter: "G" },
+  { id: "t-sui_alt", fifaCode: "ECU", name: "Ecuador", flagCode: "ec", groupLetter: "G" },
+  { id: "t-kor", fifaCode: "KOR", name: "Corea del Sur", flagCode: "kr", groupLetter: "H" },
+  { id: "t-irn", fifaCode: "IRN", name: "Irán", flagCode: "ir", groupLetter: "H" },
+  { id: "t-can", fifaCode: "CAN", name: "Canadá", flagCode: "ca", groupLetter: "I" },
+  { id: "t-tun", fifaCode: "TUN", name: "Túnez", flagCode: "tn", groupLetter: "I" },
+  { id: "t-nga", fifaCode: "NGA", name: "Nigeria", flagCode: "ng", groupLetter: "J" },
+  { id: "t-egy", fifaCode: "EGY", name: "Egipto", flagCode: "eg", groupLetter: "J" },
+  { id: "t-srb", fifaCode: "SRB", name: "Serbia", flagCode: "rs", groupLetter: "K" },
+  { id: "t-wal", fifaCode: "WAL", name: "Gales", flagCode: "gb-wls", groupLetter: "K" },
+  { id: "t-par", fifaCode: "PAR", name: "Paraguay", flagCode: "py", groupLetter: "L" },
+  { id: "t-tur", fifaCode: "TUR", name: "Turquía", flagCode: "tr", groupLetter: "L" },
 ];
 
 const findTeam = (code: string) => teams.find((t) => t.fifaCode === code)!;
@@ -584,14 +602,15 @@ export const bracket: BracketMatch[] = [
   bMatch("b-r32-6",  "round_of_32",  6, "NED", "COL", 3, 1, "finished", -230),
   bMatch("b-r32-7",  "round_of_32",  7, "FRA", "USA", 2, 1, "finished", -228),
   bMatch("b-r32-8",  "round_of_32",  8, "GER", "POR", 1, 0, "finished", -226),
-  bMatch("b-r32-9",  "round_of_32",  9, null, null, null, null, "scheduled", 8),
-  bMatch("b-r32-10", "round_of_32", 10, null, null, null, null, "scheduled", 10),
-  bMatch("b-r32-11", "round_of_32", 11, null, null, null, null, "scheduled", 12),
-  bMatch("b-r32-12", "round_of_32", 12, null, null, null, null, "scheduled", 14),
-  bMatch("b-r32-13", "round_of_32", 13, null, null, null, null, "scheduled", 16),
-  bMatch("b-r32-14", "round_of_32", 14, null, null, null, null, "scheduled", 18),
-  bMatch("b-r32-15", "round_of_32", 15, null, null, null, null, "scheduled", 20),
-  bMatch("b-r32-16", "round_of_32", 16, null, null, null, null, "scheduled", 22),
+  // Resto de R32 con teams reales (algunos finalizados, uno EN VIVO, otros próximos)
+  bMatch("b-r32-9",  "round_of_32",  9, "CRO", "DEN", 2, 0, "finished", -224),
+  bMatch("b-r32-10", "round_of_32", 10, "BEL", "POL", 1, 1, "live", -1),
+  bMatch("b-r32-11", "round_of_32", 11, "AUS", "ECU", null, null, "scheduled", 6),
+  bMatch("b-r32-12", "round_of_32", 12, "KOR", "IRN", null, null, "scheduled", 10),
+  bMatch("b-r32-13", "round_of_32", 13, "CAN", "TUN", null, null, "scheduled", 14),
+  bMatch("b-r32-14", "round_of_32", 14, "NGA", "EGY", null, null, "scheduled", 18),
+  bMatch("b-r32-15", "round_of_32", 15, "SRB", "WAL", null, null, "scheduled", 22),
+  bMatch("b-r32-16", "round_of_32", 16, "PAR", "TUR", null, null, "scheduled", 26),
 
   // ========== OCTAVOS (8 partidos) ==========
   // R16-1 (ARG vs ENG) ya jugado. R16-2 a R16-4 con teams conocidos (ganadores

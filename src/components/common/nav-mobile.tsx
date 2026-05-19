@@ -14,7 +14,7 @@ const items = [
   { href: "/profile", label: "Perfil", icon: User },
 ];
 
-const HIDDEN_ON = ["/login", "/pending", "/rejected"];
+const HIDDEN_ON = ["/login", "/pending", "/rejected", "/champion"];
 
 export function NavMobile() {
   const pathname = usePathname();

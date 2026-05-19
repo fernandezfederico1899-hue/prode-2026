@@ -15,7 +15,7 @@ const items = [
   { href: "/profile", label: "Perfil" },
 ];
 
-const HIDDEN_ON = ["/login", "/pending", "/rejected"];
+const HIDDEN_ON = ["/login", "/pending", "/rejected", "/champion"];
 
 export function NavDesktop() {
   const pathname = usePathname();

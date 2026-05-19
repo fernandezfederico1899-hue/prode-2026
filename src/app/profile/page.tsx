@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut, Shield, Sparkles } from "lucide-react";
 import { currentUser } from "@/lib/mock-data";
 import { TeamLabel } from "@/components/common/team-label";
 import { ThemeToggle } from "@/components/common/theme-toggle";
@@ -69,6 +69,24 @@ export default function ProfilePage() {
             </div>
           </div>
           <span className="text-secondary font-bold">→</span>
+        </div>
+      </Link>
+
+      {/* Preview pantalla campeón (solo mockup) */}
+      <Link
+        href="/champion"
+        className="block rounded-xl border-2 border-dashed border-accent/50 bg-accent/5 p-4 hover:bg-accent/10 transition-colors"
+      >
+        <div className="flex items-center gap-3 text-accent">
+          <Sparkles className="w-5 h-5" />
+          <div className="flex-1">
+            <div className="font-bold uppercase tracking-wide">
+              Vista previa: ¡ganaste!
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Mockup de la pantalla de campeón
+            </div>
+          </div>
         </div>
       </Link>
 
