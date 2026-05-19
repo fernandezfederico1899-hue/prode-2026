@@ -1,15 +1,14 @@
 import "server-only";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { matches, type Match } from "@/db/schema";
+import { matches } from "@/db/schema";
+import type { MatchWithTeams } from "@/lib/types";
 
-export type MatchWithTeams = Match & {
-  homeTeam: NonNullable<Awaited<ReturnType<typeof db.query.teams.findFirst>>>;
-  awayTeam: NonNullable<Awaited<ReturnType<typeof db.query.teams.findFirst>>>;
-};
+export type { MatchWithTeams };
 
 /**
- * Todos los partidos con sus teams (home + away) cargados.
+ * Todos los partidos con sus teams (home + away) cargados. Filtra los KO
+ * sin equipos asignados todavía (placeholders).
  */
 export async function getAllMatchesWithTeams(): Promise<MatchWithTeams[]> {
   const rows = await db.query.matches.findMany({
@@ -19,8 +18,9 @@ export async function getAllMatchesWithTeams(): Promise<MatchWithTeams[]> {
       awayTeam: true,
     },
   });
-  // El infer de Drizzle no expone `with` automáticamente, así que casteamos.
-  return rows as unknown as MatchWithTeams[];
+  return rows.filter(
+    (r) => r.homeTeam !== null && r.awayTeam !== null,
+  ) as unknown as MatchWithTeams[];
 }
 
 /**

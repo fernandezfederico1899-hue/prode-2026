@@ -8,6 +8,7 @@ import { adminAuditLog, matches } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { recalculateForMatch } from "@/server/scoring/recalculate";
+import { propagateKnockoutResults } from "@/server/scoring/propagate-knockouts";
 
 const correctSchema = z.object({
   matchId: z.string().uuid(),
@@ -74,6 +75,8 @@ export async function correctMatchScoreAction(
 
   // Recalcular puntos de TODOS los jugadores para este match.
   await recalculateForMatch(matchId);
+  // Si este match es KO, propagar el ganador/perdedor al siguiente.
+  await propagateKnockoutResults(matchId);
 
   await db.insert(adminAuditLog).values({
     adminEmail: session.user.email,
