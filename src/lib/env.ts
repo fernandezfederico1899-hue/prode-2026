@@ -17,6 +17,7 @@ export const env = createEnv({
     API_SPORTS_HOST: z.string().default("v3.football.api-sports.io"),
     RESEND_API_KEY: z.string().optional(),
     RESEND_FROM: z.string().optional(),
+    BLOB_READ_WRITE_TOKEN: z.string().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -44,6 +45,7 @@ export const env = createEnv({
     API_SPORTS_HOST: process.env.API_SPORTS_HOST,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM: process.env.RESEND_FROM,
+    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
