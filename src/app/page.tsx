@@ -132,7 +132,7 @@ export default async function Home() {
       {/* Próximos partidos */}
       {upcomingMatches.length > 0 && (
         <section>
-          <SectionHeader title="Próximos partidos" href="/matches" />
+          <SectionHeader title="Próximos partidos" href="/predict" />
           <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {upcomingMatches.map((m) =>
               m.status === "scheduled" ? (

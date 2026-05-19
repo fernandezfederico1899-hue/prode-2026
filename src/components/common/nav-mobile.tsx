@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListChecks, Trophy, User, LayoutGrid, Goal } from "lucide-react";
+import { Home, ListChecks, Trophy, User, LayoutGrid, GitFork } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/predict", label: "Pronós.", icon: ListChecks },
   { href: "/groups", label: "Grupos", icon: LayoutGrid },
-  { href: "/matches", label: "Partidos", icon: Goal },
+  { href: "/bracket", label: "Llave", icon: GitFork },
   { href: "/leaderboard", label: "Tabla", icon: Trophy },
   { href: "/profile", label: "Perfil", icon: User },
 ];

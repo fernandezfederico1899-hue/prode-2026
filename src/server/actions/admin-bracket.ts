@@ -94,7 +94,7 @@ export async function resolveKnockoutsAction(): Promise<
 
   revalidatePath("/admin/bracket");
   revalidatePath("/bracket");
-  revalidatePath("/matches");
+  revalidatePath("/predict");
 
   return { ok: true, data: { assigned, pendingManual } };
 }
@@ -150,7 +150,7 @@ export async function assignKnockoutSlotAction(
 
   revalidatePath("/admin/bracket");
   revalidatePath("/bracket");
-  revalidatePath("/matches");
+  revalidatePath("/predict");
 
   return { ok: true, data: undefined };
 }

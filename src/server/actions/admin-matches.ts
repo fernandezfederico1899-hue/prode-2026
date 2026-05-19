@@ -94,10 +94,9 @@ export async function correctMatchScoreAction(
   revalidatePath("/admin/matches");
   revalidatePath("/admin");
   revalidatePath("/leaderboard");
-  revalidatePath("/matches");
+  revalidatePath("/predict");
   revalidatePath(`/matches/${matchId}`);
   revalidatePath("/groups");
-  revalidatePath("/predict");
   revalidatePath("/");
 
   return { ok: true };
@@ -148,7 +147,7 @@ export async function transitionMatchStatusAction(
   });
 
   revalidatePath("/admin/matches");
-  revalidatePath("/matches");
+  revalidatePath("/predict");
   revalidatePath(`/matches/${matchId}`);
   revalidatePath("/");
 

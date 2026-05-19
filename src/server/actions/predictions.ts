@@ -62,7 +62,6 @@ export async function submitPredictionAction(
     });
 
   // Invalidamos las páginas que muestran predictions.
-  revalidatePath("/matches");
   revalidatePath("/predict");
   revalidatePath(`/matches/${matchId}`);
   revalidatePath("/");
@@ -111,7 +110,6 @@ export async function deletePredictionAction(
       ),
     );
 
-  revalidatePath("/matches");
   revalidatePath("/predict");
   revalidatePath(`/matches/${matchId}`);
   revalidatePath("/");
