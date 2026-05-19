@@ -1,27 +1,43 @@
 import Link from "next/link";
 import { ArrowRight, Coins, Network, Trophy, Users } from "lucide-react";
-import {
-  matches,
-  leaderboard,
-  userPredictions,
-  currentUser,
-  tournamentConfig,
-} from "@/lib/mock-data";
+import { auth } from "@/lib/auth";
+import { getAllMatchesWithTeams } from "@/server/queries/matches";
+import { getUserPredictionsByMatch } from "@/server/queries/predictions";
+import { getTournamentConfig } from "@/server/queries/tournament-config";
+import { getApprovedCount } from "@/server/queries/users";
+import type { Prediction } from "@/lib/types";
 import { MatchCard } from "@/components/match/match-card";
 import { EditableMatchCard } from "@/components/match/editable-match-card";
-import { LeaderboardCards } from "@/components/leaderboard/leaderboard-cards";
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+  const userId = session?.user?.id ?? "";
+  const userName = session?.user?.name?.split(" ")[0] ?? "";
+
+  const [matches, userPredictions, config, approvedCount] = await Promise.all([
+    getAllMatchesWithTeams(),
+    userId
+      ? getUserPredictionsByMatch(userId)
+      : Promise.resolve({} as Record<string, Prediction>),
+    getTournamentConfig(),
+    getApprovedCount(),
+  ]);
+
   const upcomingMatches = matches
     .filter((m) => m.status === "scheduled" || m.status === "live")
+    .sort((a, b) => a.kickoffAt.getTime() - b.kickoffAt.getTime())
     .slice(0, 3);
-  const topFive = leaderboard.slice(0, 5);
-  const myEntry = leaderboard.find((r) => r.user.id === currentUser.id);
 
   const pendingCount = matches.filter(
-    (m) =>
-      m.status === "scheduled" && !userPredictions[m.id],
+    (m) => m.status === "scheduled" && !userPredictions[m.id],
   ).length;
+
+  const loadedCount = Object.keys(userPredictions).length;
+
+  const pozoArs = config?.pozoAmountArs ?? 0;
+  // Pozo total = pozo por jugador × cantidad de approved (cuando trackeemos
+  // pagos lo cambiamos por paid count).
+  const pozoTotal = pozoArs * approvedCount;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 space-y-8">
@@ -30,7 +46,7 @@ export default function Home() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-wider text-muted-foreground font-semibold">
-              Hola {currentUser.name}
+              Hola{userName ? ` ${userName}` : ""}
             </p>
             <h1 className="font-display text-4xl md:text-6xl leading-none mt-1">
               MUNDIAL 2026
@@ -55,20 +71,20 @@ export default function Home() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3 md:gap-6 mt-6 pt-6 border-t border-border">
           <Stat
-            label="Tu puesto"
-            value={myEntry ? `${myEntry.rank}°` : "—"}
-            sub={myEntry ? `${myEntry.totalPoints} pts` : "sin partidos"}
+            label="Cargados"
+            value={`${loadedCount}`}
+            sub={`pronósticos`}
           />
           <Stat
-            label="Pozo"
-            value={`$${tournamentConfig.pozoAmountArs.toLocaleString("es-AR")}`}
-            sub={`por jugador`}
+            label="Pozo total"
+            value={`$${pozoTotal.toLocaleString("es-AR")}`}
+            sub={`${approvedCount} jugadores`}
             icon={<Coins className="w-4 h-4" />}
           />
           <Stat
-            label="Jugadores"
-            value={`${tournamentConfig.paidCount}/${tournamentConfig.totalCount}`}
-            sub="pagaron"
+            label="Inicia"
+            value={config ? formatDate(config.tournamentStartsAt) : "—"}
+            sub="Mundial 2026"
             icon={<Users className="w-4 h-4" />}
           />
         </div>
@@ -114,33 +130,29 @@ export default function Home() {
       </div>
 
       {/* Próximos partidos */}
-      <section>
-        <SectionHeader title="Próximos partidos" href="/agenda" />
-        <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {upcomingMatches.map((m) =>
-            m.status === "scheduled" ? (
-              <EditableMatchCard
-                key={m.id}
-                match={m}
-                userPrediction={userPredictions[m.id]}
-              />
-            ) : (
-              <MatchCard
-                key={m.id}
-                match={m}
-                userPrediction={userPredictions[m.id]}
-                href={`/matches/${m.id}`}
-              />
-            ),
-          )}
-        </div>
-      </section>
-
-      {/* Top 5 */}
-      <section>
-        <SectionHeader title="Top 5" href="/leaderboard" />
-        <LeaderboardCards rows={topFive} currentUserId={currentUser.id} />
-      </section>
+      {upcomingMatches.length > 0 && (
+        <section>
+          <SectionHeader title="Próximos partidos" href="/matches" />
+          <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {upcomingMatches.map((m) =>
+              m.status === "scheduled" ? (
+                <EditableMatchCard
+                  key={m.id}
+                  match={m}
+                  userPrediction={userPredictions[m.id]}
+                />
+              ) : (
+                <MatchCard
+                  key={m.id}
+                  match={m}
+                  userPrediction={userPredictions[m.id]}
+                  href={`/matches/${m.id}`}
+                />
+              ),
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -184,4 +196,12 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
       </Link>
     </div>
   );
+}
+
+function formatDate(d: Date): string {
+  return d.toLocaleDateString("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    day: "2-digit",
+    month: "short",
+  });
 }
