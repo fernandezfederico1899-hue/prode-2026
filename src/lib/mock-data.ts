@@ -115,11 +115,12 @@ const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000);
 const hoursFromNow = (h: number) => new Date(now.getTime() + h * 60 * 60 * 1000);
 
 export const matches: Match[] = [
+  // ============ GRUPO A ============
   {
     id: "m-1",
     homeTeam: findTeam("ARG"),
     awayTeam: findTeam("URU"),
-    kickoffAt: hoursAgo(48),
+    kickoffAt: hoursAgo(72),
     venue: "MetLife Stadium, New York",
     stage: "group",
     groupLetter: "A",
@@ -129,9 +130,35 @@ export const matches: Match[] = [
   },
   {
     id: "m-2",
+    homeTeam: findTeam("MEX"),
+    awayTeam: findTeam("MAR"),
+    kickoffAt: hoursAgo(60),
+    venue: "Estadio Azteca, México DF",
+    stage: "group",
+    groupLetter: "A",
+    status: "finished",
+    homeScore: 2,
+    awayScore: 1,
+  },
+  {
+    id: "m-3",
+    homeTeam: findTeam("ARG"),
+    awayTeam: findTeam("MEX"),
+    kickoffAt: hoursFromNow(28),
+    venue: "SoFi Stadium, Los Angeles",
+    stage: "group",
+    groupLetter: "A",
+    status: "scheduled",
+    homeScore: null,
+    awayScore: null,
+  },
+
+  // ============ GRUPO B ============
+  {
+    id: "m-4",
     homeTeam: findTeam("ESP"),
-    awayTeam: findTeam("USA"),
-    kickoffAt: hoursAgo(36),
+    awayTeam: findTeam("SEN"),
+    kickoffAt: hoursAgo(48),
     venue: "SoFi Stadium, Los Angeles",
     stage: "group",
     groupLetter: "B",
@@ -140,71 +167,99 @@ export const matches: Match[] = [
     awayScore: 0,
   },
   {
-    id: "m-3",
-    homeTeam: findTeam("BRA"),
-    awayTeam: findTeam("MEX"),
-    kickoffAt: hoursAgo(24),
-    venue: "Estadio Azteca, México DF",
+    id: "m-5",
+    homeTeam: findTeam("NED"),
+    awayTeam: findTeam("USA"),
+    kickoffAt: hoursAgo(36),
+    venue: "Lumen Field, Seattle",
     stage: "group",
-    groupLetter: "C",
+    groupLetter: "B",
     status: "finished",
-    homeScore: 1,
+    homeScore: 2,
     awayScore: 1,
   },
   {
-    id: "m-4",
-    homeTeam: findTeam("FRA"),
-    awayTeam: findTeam("MAR"),
-    kickoffAt: hoursAgo(1),
-    venue: "Lumen Field, Seattle",
+    id: "m-6",
+    homeTeam: findTeam("ESP"),
+    awayTeam: findTeam("NED"),
+    kickoffAt: hoursFromNow(5),
+    venue: "AT&T Stadium, Dallas",
     stage: "group",
-    groupLetter: "D",
+    groupLetter: "B",
+    status: "scheduled",
+    homeScore: null,
+    awayScore: null,
+  },
+
+  // ============ GRUPO C ============
+  {
+    id: "m-7",
+    homeTeam: findTeam("BRA"),
+    awayTeam: findTeam("SUI"),
+    kickoffAt: hoursAgo(24),
+    venue: "Hard Rock Stadium, Miami",
+    stage: "group",
+    groupLetter: "C",
+    status: "finished",
+    homeScore: 3,
+    awayScore: 1,
+  },
+  {
+    id: "m-8",
+    homeTeam: findTeam("ENG"),
+    awayTeam: findTeam("JPN"),
+    kickoffAt: hoursAgo(1),
+    venue: "BC Place, Vancouver",
+    stage: "group",
+    groupLetter: "C",
     status: "live",
     homeScore: 1,
     awayScore: 0,
   },
   {
-    id: "m-5",
-    homeTeam: findTeam("GER"),
-    awayTeam: findTeam("JPN"),
-    kickoffAt: hoursFromNow(2),
-    venue: "Hard Rock Stadium, Miami",
-    stage: "group",
-    groupLetter: "E",
-    status: "scheduled",
-    homeScore: null,
-    awayScore: null,
-  },
-  {
-    id: "m-6",
-    homeTeam: findTeam("ENG"),
-    awayTeam: findTeam("POR"),
-    kickoffAt: hoursFromNow(5),
-    venue: "AT&T Stadium, Dallas",
-    stage: "group",
-    groupLetter: "F",
-    status: "scheduled",
-    homeScore: null,
-    awayScore: null,
-  },
-  {
-    id: "m-7",
-    homeTeam: findTeam("ARG"),
-    awayTeam: findTeam("BRA"),
-    kickoffAt: hoursFromNow(28),
+    id: "m-9",
+    homeTeam: findTeam("BRA"),
+    awayTeam: findTeam("ENG"),
+    kickoffAt: hoursFromNow(50),
     venue: "MetLife Stadium, New York",
     stage: "group",
-    groupLetter: "A",
+    groupLetter: "C",
     status: "scheduled",
     homeScore: null,
     awayScore: null,
   },
+
+  // ============ GRUPO D ============
   {
-    id: "m-8",
+    id: "m-10",
     homeTeam: findTeam("FRA"),
-    awayTeam: findTeam("ESP"),
-    kickoffAt: hoursFromNow(50),
-    venue: "BC Place, Vancouver",
+    awayTeam: findTeam("COL"),
+    kickoffAt: hoursAgo(50),
+    venue: "Mercedes-Benz Stadium, Atlanta",
+    stage: "group",
+    groupLetter: "D",
+    status: "finished",
+    homeScore: 2,
+    awayScore: 0,
+  },
+  {
+    id: "m-11",
+    homeTeam: findTeam("GER"),
+    awayTeam: findTeam("POR"),
+    kickoffAt: hoursAgo(12),
+    venue: "Levi's Stadium, San Francisco",
+    stage: "group",
+    groupLetter: "D",
+    status: "finished",
+    homeScore: 1,
+    awayScore: 1,
+  },
+  {
+    id: "m-12",
+    homeTeam: findTeam("FRA"),
+    awayTeam: findTeam("GER"),
+    kickoffAt: hoursFromNow(2),
+    venue: "Arrowhead Stadium, Kansas City",
     stage: "group",
     groupLetter: "D",
     status: "scheduled",
@@ -214,15 +269,19 @@ export const matches: Match[] = [
 ];
 
 // ========== PREDICTIONS ==========
-// Predicciones del current user para algunos partidos (mostrar la variedad de estados).
+// Pronósticos del current user (Federico) — mix de exactos, signos, errados y pendientes.
 export const userPredictions: Record<string, Prediction> = {
-  "m-1": { id: "p-1", userId: "u-fede", matchId: "m-1", homeScore: 2, awayScore: 1, points: 3 }, // exacto
-  "m-2": { id: "p-2", userId: "u-fede", matchId: "m-2", homeScore: 2, awayScore: 0, points: 1 }, // signo
-  "m-3": { id: "p-3", userId: "u-fede", matchId: "m-3", homeScore: 2, awayScore: 1, points: 0 }, // erró (terminó 1-1)
-  "m-4": { id: "p-4", userId: "u-fede", matchId: "m-4", homeScore: 2, awayScore: 1, points: null }, // en vivo
-  "m-5": { id: "p-5", userId: "u-fede", matchId: "m-5", homeScore: 1, awayScore: 2, points: null },
-  "m-6": { id: "p-6", userId: "u-fede", matchId: "m-6", homeScore: 1, awayScore: 1, points: null },
-  // m-7 y m-8 sin cargar (pending)
+  "m-1": { id: "p-1", userId: "u-fede", matchId: "m-1", homeScore: 2, awayScore: 1, points: 3 },   // exacto (ARG-URU 2-1)
+  "m-2": { id: "p-2", userId: "u-fede", matchId: "m-2", homeScore: 1, awayScore: 0, points: 1 },   // signo (MEX-MAR 2-1)
+  "m-3": { id: "p-3", userId: "u-fede", matchId: "m-3", homeScore: 2, awayScore: 1, points: null }, // scheduled
+  "m-4": { id: "p-4", userId: "u-fede", matchId: "m-4", homeScore: 2, awayScore: 0, points: 1 },   // signo (ESP-SEN 3-0)
+  "m-5": { id: "p-5", userId: "u-fede", matchId: "m-5", homeScore: 1, awayScore: 2, points: 0 },   // errado (NED-USA 2-1)
+  "m-6": { id: "p-6", userId: "u-fede", matchId: "m-6", homeScore: 1, awayScore: 1, points: null }, // scheduled
+  "m-7": { id: "p-7", userId: "u-fede", matchId: "m-7", homeScore: 3, awayScore: 1, points: 3 },   // exacto (BRA-SUI 3-1)
+  "m-8": { id: "p-8", userId: "u-fede", matchId: "m-8", homeScore: 2, awayScore: 1, points: null }, // live
+  "m-10": { id: "p-10", userId: "u-fede", matchId: "m-10", homeScore: 3, awayScore: 0, points: 1 }, // signo (FRA-COL 2-0)
+  "m-12": { id: "p-12", userId: "u-fede", matchId: "m-12", homeScore: 2, awayScore: 1, points: null }, // scheduled
+  // m-9 y m-11 sin cargar (pending)
 };
 
 // ========== OTHER USERS PREDICTIONS for match detail view ==========
@@ -237,11 +296,13 @@ export const allPredictionsForMatch: Record<string, Array<Prediction & { user: U
     { id: "pa7", userId: "u-nico", matchId: "m-1", homeScore: 2, awayScore: 2, points: 0, user: users[6] },
     { id: "pa8", userId: "u-mateo", matchId: "m-1", homeScore: 1, awayScore: 0, points: 1, user: users[7] },
   ],
-  "m-4": [
-    { id: "pl1", userId: "u-fede", matchId: "m-4", homeScore: 2, awayScore: 1, points: null, user: users[0] },
-    { id: "pl2", userId: "u-manuel", matchId: "m-4", homeScore: 1, awayScore: 0, points: null, user: users[1] },
-    { id: "pl3", userId: "u-juan", matchId: "m-4", homeScore: 3, awayScore: 1, points: null, user: users[2] },
-    { id: "pl4", userId: "u-diego", matchId: "m-4", homeScore: 1, awayScore: 1, points: null, user: users[3] },
+  "m-8": [
+    { id: "pl1", userId: "u-fede", matchId: "m-8", homeScore: 2, awayScore: 1, points: null, user: users[0] },
+    { id: "pl2", userId: "u-manuel", matchId: "m-8", homeScore: 1, awayScore: 0, points: null, user: users[1] },
+    { id: "pl3", userId: "u-juan", matchId: "m-8", homeScore: 3, awayScore: 1, points: null, user: users[2] },
+    { id: "pl4", userId: "u-diego", matchId: "m-8", homeScore: 1, awayScore: 1, points: null, user: users[3] },
+    { id: "pl5", userId: "u-tomas", matchId: "m-8", homeScore: 2, awayScore: 0, points: null, user: users[5] },
+    { id: "pl6", userId: "u-mateo", matchId: "m-8", homeScore: 0, awayScore: 1, points: null, user: users[7] },
   ],
 };
 

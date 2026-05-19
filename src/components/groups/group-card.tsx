@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { GroupStanding } from "@/lib/mock-data";
 import { TeamLabel } from "@/components/common/team-label";
@@ -5,12 +7,19 @@ import { TeamLabel } from "@/components/common/team-label";
 export function GroupCard({
   letter,
   standings,
+  href,
 }: {
   letter: string;
   standings: GroupStanding[];
+  href?: string;
 }) {
-  return (
-    <article className="rounded-xl border-2 border-border bg-card overflow-hidden">
+  const card = (
+    <article
+      className={cn(
+        "rounded-xl border-2 border-border bg-card overflow-hidden transition-all",
+        href && "hover:border-primary hover:shadow-md group cursor-pointer",
+      )}
+    >
       {/* Header */}
       <header className="bg-secondary text-secondary-foreground px-4 py-3 flex items-baseline justify-between">
         <h3 className="font-display text-2xl md:text-3xl leading-none">
@@ -86,10 +95,27 @@ export function GroupCard({
       </div>
 
       {/* Footer legend */}
-      <footer className="px-4 py-2 bg-muted/30 border-t border-border text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-        <span className="inline-block w-2 h-2 rounded-full bg-accent" />
-        Clasifica a octavos
+      <footer className="px-4 py-2 bg-muted/30 border-t border-border text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-accent" />
+          Clasifica a octavos
+        </span>
+        {href && (
+          <span className="flex items-center gap-1 text-primary font-bold group-hover:translate-x-0.5 transition-transform">
+            Ver partidos
+            <ArrowRight className="w-3 h-3" />
+          </span>
+        )}
       </footer>
     </article>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {card}
+      </Link>
+    );
+  }
+  return card;
 }

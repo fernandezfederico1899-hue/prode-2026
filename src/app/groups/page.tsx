@@ -20,6 +20,7 @@ export default function GroupsPage() {
             key={letter}
             letter={letter}
             standings={groupStandings[letter]}
+            href={`/groups/${letter.toLowerCase()}`}
           />
         ))}
       </div>
