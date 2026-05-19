@@ -9,6 +9,7 @@ const items = [
   { href: "/", label: "Inicio" },
   { href: "/predict", label: "Pronósticos" },
   { href: "/groups", label: "Grupos" },
+  { href: "/bracket", label: "Llave" },
   { href: "/agenda", label: "Agenda" },
   { href: "/leaderboard", label: "Tabla" },
   { href: "/profile", label: "Perfil" },

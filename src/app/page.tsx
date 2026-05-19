@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Coins, Trophy, Users } from "lucide-react";
+import { ArrowRight, Coins, Network, Trophy, Users } from "lucide-react";
 import {
   matches,
   leaderboard,
@@ -74,25 +74,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Pronósticos Especiales */}
-      <Link
-        href="/specials"
-        className="block rounded-xl border-2 border-accent bg-gradient-to-r from-accent/15 to-accent/5 p-5 md:p-6 hover:shadow-md transition-all group"
-      >
-        <div className="flex items-center gap-4">
-          <Trophy className="w-10 h-10 md:w-12 md:h-12 text-accent shrink-0" />
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display text-xl md:text-2xl leading-tight">
-              PRONÓSTICOS ESPECIALES
-            </h3>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Campeón, goleador, mejor jugador y más. Hasta{" "}
-              <strong className="text-foreground">65 pts bonus</strong>.
-            </p>
+      {/* CTAs especiales: especiales + bracket */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <Link
+          href="/specials"
+          className="block rounded-xl border-2 border-accent bg-gradient-to-r from-accent/15 to-accent/5 p-4 md:p-5 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <Trophy className="w-9 h-9 md:w-10 md:h-10 text-accent shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-lg md:text-xl leading-tight">
+                ESPECIALES
+              </h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                Campeón, goleador y más. +65 pts bonus.
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
-          <ArrowRight className="w-5 h-5 text-accent group-hover:translate-x-0.5 transition-transform shrink-0" />
-        </div>
-      </Link>
+        </Link>
+
+        <Link
+          href="/bracket"
+          className="block rounded-xl border-2 border-secondary bg-gradient-to-r from-secondary/15 to-secondary/5 p-4 md:p-5 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <Network className="w-9 h-9 md:w-10 md:h-10 text-secondary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-lg md:text-xl leading-tight">
+                LLAVE
+              </h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                Cuadro de eliminatoria. Octavos a la Final.
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-secondary group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </div>
+        </Link>
+      </div>
 
       {/* Próximos partidos */}
       <section>

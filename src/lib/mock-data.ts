@@ -443,6 +443,84 @@ export const SPECIAL_BONUSES = {
   mostGoals: { label: "País más goleador", points: 5 },
 } as const;
 
+// ========== BRACKET (Eliminatoria) ==========
+// Mock del bracket post-fase de grupos.
+// En WC 2026 hay 5 fases: R32 → R16 → QF → SF + 3rd → Final.
+// Para el mockup arrancamos en R16 (Octavos) para que sea legible.
+export type BracketStage = "round_of_16" | "quarter" | "semi" | "third_place" | "final";
+
+export type BracketMatch = {
+  id: string;
+  stage: BracketStage;
+  position: number; // posición vertical dentro de la columna
+  team1: Team | null;
+  team2: Team | null;
+  team1Score: number | null;
+  team2Score: number | null;
+  winnerId: string | null;
+  kickoffAt: Date;
+  status: MatchStatus;
+};
+
+const bMatch = (
+  id: string,
+  stage: BracketStage,
+  position: number,
+  team1Code: string | null,
+  team2Code: string | null,
+  team1Score: number | null,
+  team2Score: number | null,
+  status: MatchStatus,
+  hoursOffset: number,
+): BracketMatch => {
+  const t1 = team1Code ? findTeam(team1Code) : null;
+  const t2 = team2Code ? findTeam(team2Code) : null;
+  let winnerId: string | null = null;
+  if (status === "finished" && t1 && t2 && team1Score !== null && team2Score !== null) {
+    winnerId = team1Score > team2Score ? t1.id : t2.id;
+  }
+  return {
+    id,
+    stage,
+    position,
+    team1: t1,
+    team2: t2,
+    team1Score,
+    team2Score,
+    winnerId,
+    kickoffAt: new Date(now.getTime() + hoursOffset * 60 * 60 * 1000),
+    status,
+  };
+};
+
+export const bracket: BracketMatch[] = [
+  // OCTAVOS (8 partidos): primeros 4 ya jugados, otros 4 programados
+  bMatch("b-r16-1", "round_of_16", 1, "ARG", "ENG", 2, 1, "finished", -120),
+  bMatch("b-r16-2", "round_of_16", 2, "MEX", "NED", null, null, "scheduled", 24),
+  bMatch("b-r16-3", "round_of_16", 3, "BRA", "SUI", 3, 0, "finished", -118),
+  bMatch("b-r16-4", "round_of_16", 4, "POR", "SEN", null, null, "scheduled", 26),
+  bMatch("b-r16-5", "round_of_16", 5, "FRA", "COL", 1, 0, "finished", -116),
+  bMatch("b-r16-6", "round_of_16", 6, "GER", "MAR", null, null, "scheduled", 28),
+  bMatch("b-r16-7", "round_of_16", 7, "ESP", "JPN", 2, 1, "finished", -114),
+  bMatch("b-r16-8", "round_of_16", 8, "URU", "USA", null, null, "scheduled", 30),
+
+  // CUARTOS (4 partidos): 2 jugados (de los ganadores de los R16 finalizados)
+  bMatch("b-qf-1", "quarter", 1, "ARG", null, null, null, "scheduled", 72),  // ARG vs ganador R16-2
+  bMatch("b-qf-2", "quarter", 2, "BRA", null, null, null, "scheduled", 76),  // BRA vs ganador R16-4
+  bMatch("b-qf-3", "quarter", 3, "FRA", null, null, null, "scheduled", 96),  // FRA vs ganador R16-6
+  bMatch("b-qf-4", "quarter", 4, "ESP", null, null, null, "scheduled", 100), // ESP vs ganador R16-8
+
+  // SEMIS (2 partidos): ambos pendientes
+  bMatch("b-sf-1", "semi", 1, null, null, null, null, "scheduled", 144),
+  bMatch("b-sf-2", "semi", 2, null, null, null, null, "scheduled", 148),
+
+  // 3ER PUESTO
+  bMatch("b-3rd", "third_place", 1, null, null, null, null, "scheduled", 192),
+
+  // FINAL
+  bMatch("b-final", "final", 1, null, null, null, null, "scheduled", 196),
+];
+
 // ========== TOURNAMENT CONFIG ==========
 export const tournamentConfig = {
   pozoAmountArs: 20000,
