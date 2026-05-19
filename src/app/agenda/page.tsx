@@ -1,6 +1,7 @@
 import { matches, userPredictions } from "@/lib/mock-data";
 import type { Match } from "@/lib/mock-data";
 import { MatchCard } from "@/components/match/match-card";
+import { EditableMatchCard } from "@/components/match/editable-match-card";
 import { StatusBadge } from "@/components/common/status-badge";
 
 // Render-time: este componente se re-evalúa cada request. Para producción
@@ -86,14 +87,22 @@ export default function AgendaPage() {
               count={dayMatches.length}
             />
             <div className="grid gap-3 md:gap-4 md:grid-cols-2">
-              {dayMatches.map((m) => (
-                <MatchCard
-                  key={m.id}
-                  match={m}
-                  userPrediction={userPredictions[m.id]}
-                  href={`/matches/${m.id}`}
-                />
-              ))}
+              {dayMatches.map((m) =>
+                m.status === "scheduled" ? (
+                  <EditableMatchCard
+                    key={m.id}
+                    match={m}
+                    userPrediction={userPredictions[m.id]}
+                  />
+                ) : (
+                  <MatchCard
+                    key={m.id}
+                    match={m}
+                    userPrediction={userPredictions[m.id]}
+                    href={`/matches/${m.id}`}
+                  />
+                ),
+              )}
             </div>
           </section>
         );

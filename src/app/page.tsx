@@ -8,6 +8,7 @@ import {
   tournamentConfig,
 } from "@/lib/mock-data";
 import { MatchCard } from "@/components/match/match-card";
+import { EditableMatchCard } from "@/components/match/editable-match-card";
 import { LeaderboardCards } from "@/components/leaderboard/leaderboard-cards";
 
 export default function Home() {
@@ -75,16 +76,24 @@ export default function Home() {
 
       {/* Próximos partidos */}
       <section>
-        <SectionHeader title="Próximos partidos" href="/matches" />
+        <SectionHeader title="Próximos partidos" href="/agenda" />
         <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {upcomingMatches.map((m) => (
-            <MatchCard
-              key={m.id}
-              match={m}
-              userPrediction={userPredictions[m.id]}
-              href={`/matches/${m.id}`}
-            />
-          ))}
+          {upcomingMatches.map((m) =>
+            m.status === "scheduled" ? (
+              <EditableMatchCard
+                key={m.id}
+                match={m}
+                userPrediction={userPredictions[m.id]}
+              />
+            ) : (
+              <MatchCard
+                key={m.id}
+                match={m}
+                userPrediction={userPredictions[m.id]}
+                href={`/matches/${m.id}`}
+              />
+            ),
+          )}
         </div>
       </section>
 

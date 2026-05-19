@@ -1,5 +1,6 @@
 import { matches, userPredictions } from "@/lib/mock-data";
 import { MatchCard } from "@/components/match/match-card";
+import { EditableMatchCard } from "@/components/match/editable-match-card";
 
 export default function PredictPage() {
   // Editables: podés cargar/cambiar el pronóstico (no empezó todavía)
@@ -42,11 +43,7 @@ export default function PredictPage() {
           </h2>
           <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {pending.map((m) => (
-              <MatchCard
-                key={m.id}
-                match={m}
-                href={`/predict/${m.id}`}
-              />
+              <EditableMatchCard key={m.id} match={m} />
             ))}
           </div>
         </section>
@@ -62,11 +59,10 @@ export default function PredictPage() {
           </h2>
           <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {loaded.map((m) => (
-              <MatchCard
+              <EditableMatchCard
                 key={m.id}
                 match={m}
                 userPrediction={userPredictions[m.id]}
-                href={`/predict/${m.id}`}
               />
             ))}
           </div>
