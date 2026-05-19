@@ -35,6 +35,10 @@ const baseProviders = [
   Google({
     clientId: env.AUTH_GOOGLE_ID,
     clientSecret: env.AUTH_GOOGLE_SECRET,
+    // Permitimos linkear cuentas Google a users que ya existen por email.
+    // Para nuestro caso (whitelist controlada por admin) es seguro: si alguien
+    // ya tiene un user con su mail, fue por aprobación previa o pre-seed.
+    allowDangerousEmailAccountLinking: true,
     authorization: {
       params: {
         scope: "openid email profile",
