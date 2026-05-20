@@ -2,6 +2,10 @@ import { Check, Clock, X } from "lucide-react";
 import { getUsersByStatus } from "@/server/queries/users";
 import { UserActionButtons } from "@/components/admin/user-action-buttons";
 
+// Render dinámico: el conteo de usuarios depende de registros que llegan por
+// Auth.js (fuera de las server actions), así que no podemos prerenderizar.
+export const dynamic = "force-dynamic";
+
 const FORMAT = new Intl.DateTimeFormat("es-AR", {
   day: "2-digit",
   month: "short",

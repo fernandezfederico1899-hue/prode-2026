@@ -13,6 +13,10 @@ import { getAllMatchesWithTeams } from "@/server/queries/matches";
 import { getTournamentConfig } from "@/server/queries/tournament-config";
 import { getAuditLogEntries, getAllPayments } from "@/server/queries/admin";
 
+// Render dinámico: el card "Usuarios pendientes" debe reflejar registros nuevos
+// que llegan por Auth.js (fuera de las server actions que revalidan paths).
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
   const [pending, matches, config, audit, approved, payments] =
     await Promise.all([
