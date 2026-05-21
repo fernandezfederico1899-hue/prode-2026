@@ -1,35 +1,35 @@
 import Link from "next/link";
 import { ArrowRight, Coins, Network, Trophy, Users } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { getAllMatchesWithTeams } from "@/server/queries/matches";
+import { getAllMatchesForFixture } from "@/server/queries/matches";
 import { getUserPredictionsByMatch } from "@/server/queries/predictions";
 import { getTournamentConfig } from "@/server/queries/tournament-config";
 import { getApprovedCount } from "@/server/queries/users";
 import type { Prediction } from "@/lib/types";
-import { MatchCard } from "@/components/match/match-card";
-import { InlinePredictCard } from "@/components/match/inline-predict-card";
+import { FixtureList } from "@/components/match/fixture-list";
 
 export default async function Home() {
   const session = await auth();
   const userId = session?.user?.id ?? "";
   const userName = session?.user?.name?.split(" ")[0] ?? "";
 
-  const [matches, userPredictions, config, approvedCount] = await Promise.all([
-    getAllMatchesWithTeams(),
-    userId
-      ? getUserPredictionsByMatch(userId)
-      : Promise.resolve({} as Record<string, Prediction>),
-    getTournamentConfig(),
-    getApprovedCount(),
-  ]);
+  const [fixtureMatches, userPredictions, config, approvedCount] =
+    await Promise.all([
+      getAllMatchesForFixture(),
+      userId
+        ? getUserPredictionsByMatch(userId)
+        : Promise.resolve({} as Record<string, Prediction>),
+      getTournamentConfig(),
+      getApprovedCount(),
+    ]);
 
-  const upcomingMatches = matches
-    .filter((m) => m.status === "scheduled" || m.status === "live")
-    .sort((a, b) => a.kickoffAt.getTime() - b.kickoffAt.getTime())
-    .slice(0, 3);
-
-  const pendingCount = matches.filter(
-    (m) => m.status === "scheduled" && !userPredictions[m.id],
+  // Pronosticables = partidos programados con ambos equipos definidos.
+  const pendingCount = fixtureMatches.filter(
+    (m) =>
+      m.status === "scheduled" &&
+      m.homeTeam !== null &&
+      m.awayTeam !== null &&
+      !userPredictions[m.id],
   ).length;
 
   const loadedCount = Object.keys(userPredictions).length;
@@ -129,28 +129,16 @@ export default async function Home() {
         </Link>
       </div>
 
-      {/* Próximos partidos */}
-      {upcomingMatches.length > 0 && (
+      {/* Fixture completo: todos los partidos por día y horario */}
+      {fixtureMatches.length > 0 && (
         <section>
-          <SectionHeader title="Próximos partidos" href="/predict" />
-          <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {upcomingMatches.map((m) =>
-              m.status === "scheduled" ? (
-                <InlinePredictCard
-                  key={m.id}
-                  match={m}
-                  userPrediction={userPredictions[m.id]}
-                />
-              ) : (
-                <MatchCard
-                  key={m.id}
-                  match={m}
-                  userPrediction={userPredictions[m.id]}
-                  href={`/matches/${m.id}`}
-                />
-              ),
-            )}
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="font-display text-2xl md:text-3xl">FIXTURE</h2>
+            <span className="text-sm text-muted-foreground tabular-nums">
+              {fixtureMatches.length} partidos
+            </span>
           </div>
+          <FixtureList matches={fixtureMatches} />
         </section>
       )}
     </div>
@@ -180,20 +168,6 @@ function Stat({
       <div className="text-[10px] md:text-xs text-muted-foreground mt-0.5">
         {sub}
       </div>
-    </div>
-  );
-}
-
-function SectionHeader({ title, href }: { title: string; href: string }) {
-  return (
-    <div className="flex items-baseline justify-between mb-4">
-      <h2 className="font-display text-2xl md:text-3xl">{title}</h2>
-      <Link
-        href={href}
-        className="text-sm font-bold uppercase tracking-wide text-primary hover:underline inline-flex items-center gap-1"
-      >
-        Ver todo <ArrowRight className="w-3 h-3" />
-      </Link>
     </div>
   );
 }

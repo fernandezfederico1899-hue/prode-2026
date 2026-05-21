@@ -21,5 +21,14 @@ export type MatchWithTeams = DbMatch & {
   awayTeam: DbTeam;
 };
 
+/**
+ * Match para el fixture: los teams pueden ser null en los KO sin definir
+ * (se muestran con homeSlot/awaySlot).
+ */
+export type MatchForFixture = DbMatch & {
+  homeTeam: DbTeam | null;
+  awayTeam: DbTeam | null;
+};
+
 export type MatchStage = DbMatch["stage"];
 export type MatchStatus = DbMatch["status"];

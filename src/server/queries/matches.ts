@@ -2,9 +2,25 @@ import "server-only";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { matches } from "@/db/schema";
-import type { MatchWithTeams } from "@/lib/types";
+import type { MatchForFixture, MatchWithTeams } from "@/lib/types";
 
 export type { MatchWithTeams };
+
+/**
+ * Todos los partidos para el fixture cronológico, incluidos los KO que todavía
+ * no tienen equipos asignados (se muestran con sus slots placeholder). A
+ * diferencia de getAllMatchesWithTeams, NO filtra los partidos sin teams.
+ */
+export async function getAllMatchesForFixture(): Promise<MatchForFixture[]> {
+  const rows = await db.query.matches.findMany({
+    orderBy: [asc(matches.kickoffAt)],
+    with: {
+      homeTeam: true,
+      awayTeam: true,
+    },
+  });
+  return rows as unknown as MatchForFixture[];
+}
 
 /**
  * Todos los partidos con sus teams (home + away) cargados. Filtra los KO
