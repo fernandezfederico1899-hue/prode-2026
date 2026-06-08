@@ -3,6 +3,10 @@ import { getAllPayments } from "@/server/queries/admin";
 import { getTournamentConfig } from "@/server/queries/tournament-config";
 import { PaymentToggle } from "@/components/admin/payment-toggle";
 
+// Admin page: always read the DB live so users added out-of-band (e.g. via
+// scripts/add-user.mjs) show up without waiting for a revalidatePath.
+export const dynamic = "force-dynamic";
+
 export default async function AdminPaymentsPage() {
   const [rows, config] = await Promise.all([
     getAllPayments(),
