@@ -72,6 +72,15 @@ class ApiSportsClient {
   }
 
   /**
+   * Trae un fixture puntual por ID. Lo usamos para confirmar el final de un
+   * partido que ya no aparece en live=all (los FT salen de ese feed).
+   */
+  async fetchFixtureById(id: number): Promise<ApiSportsFixture | null> {
+    const res = await this.call<ApiSportsFixture>(`/fixtures?id=${id}`);
+    return res[0] ?? null;
+  }
+
+  /**
    * Track requests/día en tournament_config.apiSportsDailyCount.
    * Resetea automático al cambiar la fecha.
    */

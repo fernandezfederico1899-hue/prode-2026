@@ -47,11 +47,16 @@ export async function syncLive(): Promise<{
   const windowStart = new Date(now - 4 * 60 * 60 * 1000); // -4hrs
   const windowEnd = new Date(now + 30 * 60 * 1000); // +30min
 
+  // Un match en "live" entra siempre como candidato (aunque haya salido de la
+  // ventana): si quedó clavado en live necesitamos cerrarlo sí o sí.
   const candidates = await db.query.matches.findMany({
-    where: and(
-      gte(matches.kickoffAt, windowStart),
-      lte(matches.kickoffAt, windowEnd),
-      or(eq(matches.status, "scheduled"), eq(matches.status, "live")),
+    where: or(
+      and(
+        gte(matches.kickoffAt, windowStart),
+        lte(matches.kickoffAt, windowEnd),
+        eq(matches.status, "scheduled"),
+      ),
+      eq(matches.status, "live"),
     ),
     with: { homeTeam: true, awayTeam: true },
   });
@@ -66,51 +71,88 @@ export async function syncLive(): Promise<{
   // 4. Match by team names (openfootballName). Solo si los teams ya están
   // resueltos (no es un placeholder KO sin asignar).
   let updated = 0;
+  let callsUsed = 1;
+  const stuckLive: typeof candidates = [];
+
   for (const c of candidates) {
     if (!c.homeTeam || !c.awayTeam) continue;
     const fixture = liveFixtures.find((f) =>
       teamMatch(f, c.homeTeam!.openfootballName, c.awayTeam!.openfootballName),
     );
-    if (!fixture) continue;
-
-    const newStatus = STATUS_MAP[fixture.fixture.status.short] ?? c.status;
-    const homeScore = fixture.goals.home;
-    const awayScore = fixture.goals.away;
-
-    const changed =
-      newStatus !== c.status ||
-      homeScore !== c.homeScore ||
-      awayScore !== c.awayScore;
-
-    if (!changed) continue;
-
-    await db
-      .update(matches)
-      .set({
-        status: newStatus,
-        homeScore,
-        awayScore,
-        apiSportsFixtureId: fixture.fixture.id,
-        lastSyncedAt: new Date(),
-        finishedAt: newStatus === "finished" ? new Date() : null,
-        updatedAt: new Date(),
-      })
-      .where(eq(matches.id, c.id));
-
-    // Si terminó, recalculamos puntos y propagamos KO si corresponde.
-    if (newStatus === "finished") {
-      await recalculateForMatch(c.id);
-      await propagateKnockoutResults(c.id);
+    if (!fixture) {
+      // Estaba live y ya no aparece en live=all: probablemente terminó (los FT
+      // salen de ese feed enseguida). Lo confirmamos por ID en el paso 5.
+      if (c.status === "live") stuckLive.push(c);
+      continue;
     }
 
-    updated++;
+    if (await applyFixture(c, fixture)) updated++;
+  }
+
+  // 5. Fallback para matches clavados en live: 1 llamada por ID para traer el
+  // estado real (FT/AET/PEN). Sin esto, un match que termina entre dos ticks
+  // del cron queda en "live" para siempre y nunca se recalculan los puntos.
+  for (const c of stuckLive) {
+    if (!c.apiSportsFixtureId) continue;
+    const fixture = await apiSports.fetchFixtureById(c.apiSportsFixtureId);
+    callsUsed++;
+    if (!fixture) continue;
+
+    if (await applyFixture(c, fixture)) updated++;
   }
 
   return {
-    callsUsed: 1,
+    callsUsed,
     matchesUpdated: updated,
-    reason: `${candidates.length} candidatos, ${liveFixtures.length} en vivo global, ${updated} actualizados`,
+    reason: `${candidates.length} candidatos, ${liveFixtures.length} en vivo global, ${stuckLive.length} resueltos por ID, ${updated} actualizados`,
   };
+}
+
+/**
+ * Aplica el estado/score de un fixture de API-Sports a nuestro match.
+ * Devuelve true si hubo cambios. Si el match terminó, recalcula puntos y
+ * propaga KO.
+ */
+async function applyFixture(
+  c: {
+    id: string;
+    status: (typeof matches.status.enumValues)[number];
+    homeScore: number | null;
+    awayScore: number | null;
+  },
+  fixture: ApiSportsFixture,
+): Promise<boolean> {
+  const newStatus = STATUS_MAP[fixture.fixture.status.short] ?? c.status;
+  const homeScore = fixture.goals.home;
+  const awayScore = fixture.goals.away;
+
+  const changed =
+    newStatus !== c.status ||
+    homeScore !== c.homeScore ||
+    awayScore !== c.awayScore;
+
+  if (!changed) return false;
+
+  await db
+    .update(matches)
+    .set({
+      status: newStatus,
+      homeScore,
+      awayScore,
+      apiSportsFixtureId: fixture.fixture.id,
+      lastSyncedAt: new Date(),
+      finishedAt: newStatus === "finished" ? new Date() : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(matches.id, c.id));
+
+  // Si terminó, recalculamos puntos y propagamos KO si corresponde.
+  if (newStatus === "finished") {
+    await recalculateForMatch(c.id);
+    await propagateKnockoutResults(c.id);
+  }
+
+  return true;
 }
 
 /**
