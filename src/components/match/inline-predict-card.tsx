@@ -49,12 +49,50 @@ export function InlinePredictCard({
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSent = useRef<string>(""); // "home-away" del último envío exitoso
+  // Score pendiente de envío mientras corre el debounce. Si la página se
+  // oculta o el componente se desmonta antes del timeout, lo mandamos ya:
+  // sin esto, editar y cerrar la app dentro de los 600ms pierde el cambio
+  // en silencio (pasó con un pronóstico real).
+  const pendingSave = useRef<{ h: number; a: number } | null>(null);
 
-  // Cleanup del timer al desmontar.
+  const doSave = async (h: number, a: number) => {
+    pendingSave.current = null;
+    setState("saving");
+    setErrorMsg(null);
+    const res = await submitPredictionAction({
+      matchId: match.id,
+      homeScore: h,
+      awayScore: a,
+    });
+    if (res.ok) {
+      lastSent.current = `${h}-${a}`;
+      setState("saved");
+    } else {
+      setState("error");
+      setErrorMsg(humanError(res.error));
+    }
+  };
+
+  const flushPending = () => {
+    if (!pendingSave.current) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    const { h, a } = pendingSave.current;
+    void doSave(h, a);
+  };
+
+  // Flush del save pendiente al ocultar la página o desmontar el componente.
   useEffect(() => {
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
+    const onHidden = () => {
+      if (document.visibilityState === "hidden") flushPending();
     };
+    document.addEventListener("visibilitychange", onHidden);
+    window.addEventListener("pagehide", flushPending);
+    return () => {
+      document.removeEventListener("visibilitychange", onHidden);
+      window.removeEventListener("pagehide", flushPending);
+      flushPending();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const tryAutoSave = (nextHome: string, nextAway: string) => {
@@ -72,22 +110,8 @@ export function InlinePredictCard({
 
     if (saveTimer.current) clearTimeout(saveTimer.current);
     setState("idle");
-    saveTimer.current = setTimeout(async () => {
-      setState("saving");
-      setErrorMsg(null);
-      const res = await submitPredictionAction({
-        matchId: match.id,
-        homeScore: h,
-        awayScore: a,
-      });
-      if (res.ok) {
-        lastSent.current = key;
-        setState("saved");
-      } else {
-        setState("error");
-        setErrorMsg(humanError(res.error));
-      }
-    }, AUTOSAVE_DELAY_MS);
+    pendingSave.current = { h, a };
+    saveTimer.current = setTimeout(() => void doSave(h, a), AUTOSAVE_DELAY_MS);
   };
 
   const onHomeChange = (v: string) => {
@@ -103,6 +127,7 @@ export function InlinePredictCard({
     if (locked || state === "saving") return;
     if (!confirm("¿Borrar tu pronóstico de este partido?")) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
+    pendingSave.current = null;
     // Si nunca se guardó (no hay prediction inicial), solo limpiamos local.
     const wasPersisted = lastSent.current !== "" || userPrediction !== undefined;
     setHome("");
@@ -169,7 +194,12 @@ export function InlinePredictCard({
       </div>
 
       <footer className="mt-4 pt-3 border-t border-border flex items-center justify-between gap-3 text-sm">
-        <SaveIndicator state={state} locked={locked} error={errorMsg} />
+        <SaveIndicator
+          state={state}
+          locked={locked}
+          error={errorMsg}
+          dirty={pendingSave.current !== null}
+        />
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground tabular-nums">
             +3 exacto · +1 signo
@@ -224,10 +254,12 @@ function SaveIndicator({
   state,
   locked,
   error,
+  dirty,
 }: {
   state: SaveState;
   locked: boolean;
   error: string | null;
+  dirty: boolean;
 }) {
   if (locked) {
     return (
@@ -258,6 +290,14 @@ function SaveIndicator({
       <span className="inline-flex items-center gap-1 text-destructive">
         <AlertCircle className="w-3.5 h-3.5" />
         {error ?? "Error"}
+      </span>
+    );
+  }
+  if (dirty) {
+    return (
+      <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
+        <Clock className="w-3.5 h-3.5" />
+        Sin guardar…
       </span>
     );
   }
