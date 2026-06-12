@@ -4,6 +4,10 @@ import { db } from "@/db";
 import { matches } from "@/db/schema";
 import { formatSlot, matchShortLabel } from "@/lib/bracket-format";
 
+// Render dinámico: los resultados los actualiza el cron de sync (fuera de
+// cualquier revalidatePath), así que no podemos prerenderizar.
+export const dynamic = "force-dynamic";
+
 const STAGE_LABELS: Record<string, string> = {
   round_of_32: "16avos",
   round_of_16: "Octavos",

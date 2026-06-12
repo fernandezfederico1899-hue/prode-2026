@@ -4,6 +4,9 @@ import { db } from "@/db";
 import { players, teams } from "@/db/schema";
 import { SyncRostersButton } from "@/components/admin/sync-rosters-button";
 
+// Render dinámico: los rosters se sincronizan fuera de revalidatePath.
+export const dynamic = "force-dynamic";
+
 export default async function AdminRostersPage() {
   const teamsWithCounts = await db
     .select({

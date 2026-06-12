@@ -1,6 +1,10 @@
 import { getGroupStandings } from "@/server/queries/standings";
 import { GroupCard } from "@/components/groups/group-card";
 
+// Render dinámico: los resultados los actualiza el cron de sync (fuera de
+// cualquier revalidatePath), así que no podemos prerenderizar.
+export const dynamic = "force-dynamic";
+
 export default async function GroupsPage() {
   const groupStandings = await getGroupStandings();
   const letters = Object.keys(groupStandings).sort();

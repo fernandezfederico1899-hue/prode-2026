@@ -10,6 +10,10 @@ import { BracketResolver } from "@/components/admin/bracket-resolver";
 import { KoSlotAssigner } from "@/components/admin/ko-slot-assigner";
 import { formatSlot, matchShortLabel } from "@/lib/bracket-format";
 
+// Render dinámico: los resultados los actualiza el cron de sync (fuera de
+// cualquier revalidatePath), así que no podemos prerenderizar.
+export const dynamic = "force-dynamic";
+
 const KICKOFF_FMT = new Intl.DateTimeFormat("es-AR", {
   weekday: "short",
   day: "2-digit",

@@ -4,6 +4,9 @@ import { teams, tournamentConfig } from "@/db/schema";
 import { getAllPlayersWithTeam } from "@/server/queries/players";
 import { BonusForm } from "@/components/admin/bonus-form";
 
+// Render dinámico: lee config/rosters que cambian fuera de revalidatePath.
+export const dynamic = "force-dynamic";
+
 export default async function AdminBonusPage() {
   const [allTeams, players, config] = await Promise.all([
     db.select().from(teams).orderBy(asc(teams.name)),

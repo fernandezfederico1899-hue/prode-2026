@@ -2,6 +2,9 @@ import { ConfigForm } from "@/components/admin/config-form";
 import { getTournamentConfig } from "@/server/queries/tournament-config";
 import { env } from "@/lib/env";
 
+// Render dinámico: la config se puede tocar por script (fuera de revalidatePath).
+export const dynamic = "force-dynamic";
+
 export default async function AdminConfigPage() {
   const config = await getTournamentConfig();
   const tournamentStarted = config

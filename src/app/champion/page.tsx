@@ -6,6 +6,10 @@ import { getAllPayments } from "@/server/queries/admin";
 import { ConfettiBurst } from "@/components/champion/confetti-burst";
 import { PositionMedal } from "@/components/leaderboard/position-medal";
 
+// Render dinámico: los resultados los actualiza el cron de sync (fuera de
+// cualquier revalidatePath), así que no podemos prerenderizar.
+export const dynamic = "force-dynamic";
+
 export default async function ChampionPage() {
   const [leaderboard, config, payments] = await Promise.all([
     getLeaderboard(),

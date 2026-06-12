@@ -1,5 +1,8 @@
 import { getAuditLogEntries } from "@/server/queries/admin";
 
+// Render dinámico: el log crece fuera de las server actions que revalidan.
+export const dynamic = "force-dynamic";
+
 const FORMAT = new Intl.DateTimeFormat("es-AR", {
   day: "2-digit",
   month: "short",

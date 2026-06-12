@@ -5,6 +5,10 @@ import { StatusBadge } from "@/components/common/status-badge";
 import { CorrectScoreDialog } from "@/components/admin/correct-score-dialog";
 import type { MatchWithTeams } from "@/lib/types";
 
+// Render dinámico: los resultados los actualiza el cron de sync (fuera de
+// cualquier revalidatePath), así que no podemos prerenderizar.
+export const dynamic = "force-dynamic";
+
 const FORMAT = new Intl.DateTimeFormat("es-AR", {
   weekday: "short",
   day: "2-digit",
