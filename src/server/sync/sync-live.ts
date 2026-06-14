@@ -25,11 +25,19 @@ const STATUS_MAP: Record<string, "scheduled" | "live" | "finished"> = {
   NS: "scheduled",
 };
 
-// Tope diario de seguridad. El free plan da 100 req/día y API-Football NO manda
-// 429 al pasarse: suspende la cuenta por "excessive request patterns". Cortamos
-// antes de llegar a 100, dejando margen para las varias llamadas que puede hacer
-// un solo tick (1 live=all + N por-ID de partidos clavados).
-const DAILY_BUDGET = 95;
+// Tope diario de seguridad. football-data free limita por MINUTO (10/min), no
+// por día, así que esto NO es un límite del proveedor sino un cortacircuitos
+// ante un loop descontrolado. Con cron cada 10 min el uso real es ~50-100/día.
+const DAILY_BUDGET = 400;
+
+// Alias de equipos: nuestro openfootballName vs el nombre de football-data.
+// La mayoría coincide; estos 4 no (clave: ambos normalizados con norm()).
+const TEAM_ALIASES: Record<string, string> = {
+  usa: "unitedstates",
+  czechrepublic: "czechia",
+  capeverde: "capeverdeislands",
+  drcongo: "congodr",
+};
 
 /**
  * Sync core: chequea si tenemos algún partido en ventana de juego (o que se
@@ -185,8 +193,8 @@ function teamMatch(
 ): boolean {
   const apiHome = norm(fixture.teams.home.name);
   const apiAway = norm(fixture.teams.away.name);
-  const ourHome = norm(ourHomeName);
-  const ourAway = norm(ourAwayName);
+  const ourHome = alias(norm(ourHomeName));
+  const ourAway = alias(norm(ourAwayName));
   return apiHome === ourHome && apiAway === ourAway;
 }
 
@@ -196,4 +204,9 @@ function norm(s: string): string {
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "") // accents
     .replace(/[^a-z0-9]/g, ""); // non-alphanumeric
+}
+
+// Traduce el nombre normalizado de nuestra DB al de football-data si difiere.
+function alias(normalized: string): string {
+  return TEAM_ALIASES[normalized] ?? normalized;
 }

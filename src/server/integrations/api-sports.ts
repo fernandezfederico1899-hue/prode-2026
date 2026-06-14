@@ -4,8 +4,17 @@ import { db } from "@/db";
 import { tournamentConfig } from "@/db/schema";
 import { env } from "@/lib/env";
 
-const BASE_URL = `https://${env.API_SPORTS_HOST}`;
+// NOTA: este módulo era un cliente de API-Football (api-sports.io). Migrado a
+// football-data.org (2026-06-14) tras suspensiones repetidas por exceder el
+// límite de 100 req/día. football-data free da 10 req/MIN y cubre el Mundial.
+// Mantenemos el nombre del archivo, el export `apiSports` y el shape
+// `ApiSportsFixture` para no tocar el resto del código (sync-live.ts).
 
+const BASE_URL = "https://api.football-data.org/v4";
+const WC_COMPETITION = "WC"; // FIFA World Cup (id 2000)
+
+// Shape interno que consume sync-live.ts. Lo mantenemos estable: adaptamos la
+// respuesta de football-data a esta forma.
 export type ApiSportsFixture = {
   fixture: {
     id: number;
@@ -20,27 +29,63 @@ export type ApiSportsFixture = {
   goals: { home: number | null; away: number | null };
 };
 
-type ApiResponse<T> = {
-  errors: unknown;
-  results: number;
-  response: T[];
+// --- Tipos de football-data.org (parcial, solo lo que usamos) ---
+type FdTeam = { id: number; name: string };
+type FdMatch = {
+  id: number;
+  utcDate: string;
+  status: string; // SCHEDULED|TIMED|IN_PLAY|PAUSED|FINISHED|SUSPENDED|POSTPONED|CANCELLED|AWARDED
+  homeTeam: FdTeam;
+  awayTeam: FdTeam;
+  score: { fullTime: { home: number | null; away: number | null } };
+};
+type FdMatchesResponse = { matches: FdMatch[] };
+
+// status de football-data → código corto que entiende STATUS_MAP en sync-live.
+const FD_STATUS_TO_SHORT: Record<string, string> = {
+  FINISHED: "FT",
+  AWARDED: "FT",
+  IN_PLAY: "1H",
+  PAUSED: "HT",
+  TIMED: "NS",
+  SCHEDULED: "NS",
+  // SUSPENDED/POSTPONED/CANCELLED: no mapeamos → applyFixture mantiene el status actual.
 };
 
-class ApiSportsClient {
-  private async call<T>(path: string): Promise<T[]> {
-    if (!env.API_SPORTS_KEY) {
-      throw new Error("API_SPORTS_KEY no configurada");
+function adaptMatch(m: FdMatch): ApiSportsFixture {
+  return {
+    fixture: {
+      id: m.id,
+      date: m.utcDate,
+      status: {
+        long: m.status,
+        short: FD_STATUS_TO_SHORT[m.status] ?? m.status,
+        elapsed: null,
+      },
+    },
+    league: { id: 2000, season: 2026 },
+    teams: {
+      home: { id: m.homeTeam.id, name: m.homeTeam.name },
+      away: { id: m.awayTeam.id, name: m.awayTeam.name },
+    },
+    goals: {
+      home: m.score?.fullTime?.home ?? null,
+      away: m.score?.fullTime?.away ?? null,
+    },
+  };
+}
+
+class FootballDataClient {
+  private async call<T>(path: string): Promise<T> {
+    if (!env.FOOTBALL_DATA_TOKEN) {
+      throw new Error("FOOTBALL_DATA_TOKEN no configurada");
     }
 
-    // Cuenta el request en la DB para no pasarnos del límite.
+    // Cuenta el request en la DB (telemetría / red de seguridad).
     await this.trackUsage();
 
     const res = await fetch(`${BASE_URL}${path}`, {
-      headers: {
-        "x-rapidapi-key": env.API_SPORTS_KEY,
-        "x-rapidapi-host": env.API_SPORTS_HOST,
-      },
-      // No cachear — siempre queremos data fresca.
+      headers: { "X-Auth-Token": env.FOOTBALL_DATA_TOKEN },
       cache: "no-store",
     });
 
@@ -49,35 +94,35 @@ class ApiSportsClient {
       throw new Error("rate_limited");
     }
     if (!res.ok) {
-      throw new Error(`api_sports_http_${res.status}`);
+      const txt = await res.text();
+      throw new Error(`football_data_http_${res.status}: ${txt.slice(0, 200)}`);
     }
 
-    const json = (await res.json()) as ApiResponse<T>;
-    // API-Sports tira errors como obj o array. Si tiene contenido, es error.
-    const errs = json.errors;
-    const hasErrors =
-      (Array.isArray(errs) && errs.length > 0) ||
-      (errs && typeof errs === "object" && Object.keys(errs).length > 0);
-    if (hasErrors) {
-      throw new Error(`api_sports_error: ${JSON.stringify(errs)}`);
-    }
-    return json.response;
+    return (await res.json()) as T;
   }
 
   /**
-   * Trae todos los partidos en vivo a nivel global. Free plan permite esto.
+   * Trae TODOS los partidos del Mundial en una sola llamada (104). Incluye los
+   * FINISHED, así que no hace falta un fallback por ID: el estado actual de cada
+   * partido siempre está acá. El nombre se mantiene por compatibilidad.
    */
   async fetchLiveFixtures(): Promise<ApiSportsFixture[]> {
-    return this.call<ApiSportsFixture>("/fixtures?live=all");
+    const data = await this.call<FdMatchesResponse>(
+      `/competitions/${WC_COMPETITION}/matches`,
+    );
+    return (data.matches ?? []).map(adaptMatch);
   }
 
   /**
-   * Trae un fixture puntual por ID. Lo usamos para confirmar el final de un
-   * partido que ya no aparece en live=all (los FT salen de ese feed).
+   * Trae un partido puntual por ID de football-data. Fallback defensivo.
    */
   async fetchFixtureById(id: number): Promise<ApiSportsFixture | null> {
-    const res = await this.call<ApiSportsFixture>(`/fixtures?id=${id}`);
-    return res[0] ?? null;
+    try {
+      const m = await this.call<FdMatch>(`/matches/${id}`);
+      return m?.id ? adaptMatch(m) : null;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -100,8 +145,8 @@ class ApiSportsClient {
   }
 
   private async markRateLimited(): Promise<void> {
-    // Pausamos 2hs en caso de 429.
-    const pauseUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    // football-data limita por MINUTO (10/min en free). Pausa corta: 5 min.
+    const pauseUntil = new Date(Date.now() + 5 * 60 * 1000);
     await db
       .update(tournamentConfig)
       .set({ apiPausedUntil: pauseUntil })
@@ -129,9 +174,11 @@ class ApiSportsClient {
     const sameDay = cfg?.apiSportsCountDate === today;
     return {
       count: sameDay ? (cfg?.apiSportsDailyCount ?? 0) : 0,
-      limit: 100,
+      // football-data free no tiene tope diario duro (solo 10/min). Dejamos un
+      // tope informativo alto como red de seguridad ante loops.
+      limit: 500,
     };
   }
 }
 
-export const apiSports = new ApiSportsClient();
+export const apiSports = new FootballDataClient();
