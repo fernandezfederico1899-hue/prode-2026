@@ -25,6 +25,12 @@ const STATUS_MAP: Record<string, "scheduled" | "live" | "finished"> = {
   NS: "scheduled",
 };
 
+// Tope diario de seguridad. El free plan da 100 req/día y API-Football NO manda
+// 429 al pasarse: suspende la cuenta por "excessive request patterns". Cortamos
+// antes de llegar a 100, dejando margen para las varias llamadas que puede hacer
+// un solo tick (1 live=all + N por-ID de partidos clavados).
+const DAILY_BUDGET = 95;
+
 /**
  * Sync core: chequea si tenemos algún partido en ventana de juego (o que se
  * acaba de pasar a finished) y si es así, hace 1 llamada a /fixtures?live=all.
@@ -42,10 +48,22 @@ export async function syncLive(): Promise<{
     return { callsUsed: 0, matchesUpdated: 0, reason: "rate_limit_pause" };
   }
 
-  // 2. ¿Hay algún partido en ventana? (kickoff en últimas 4hs o próximas 30min)
+  // 1.5. ¿Nos queda budget diario? Corte duro para no gatillar la suspensión.
+  const usage = await apiSports.getUsageToday();
+  if (usage.count >= DAILY_BUDGET) {
+    return {
+      callsUsed: 0,
+      matchesUpdated: 0,
+      reason: `daily_budget_reached (${usage.count}/${usage.limit})`,
+    };
+  }
+
+  // 2. ¿Hay algún partido en ventana? Polleamos desde 15min antes del kickoff
+  // (no 4hs: eso quemaba llamadas sin que el partido hubiera empezado) hasta
+  // 2.5hs después (cubre el partido completo por si no lo agarramos en `live`).
   const now = Date.now();
-  const windowStart = new Date(now - 4 * 60 * 60 * 1000); // -4hrs
-  const windowEnd = new Date(now + 30 * 60 * 1000); // +30min
+  const windowStart = new Date(now - 150 * 60 * 1000); // -2.5hs
+  const windowEnd = new Date(now + 15 * 60 * 1000); // +15min
 
   // Un match en "live" entra siempre como candidato (aunque haya salido de la
   // ventana): si quedó clavado en live necesitamos cerrarlo sí o sí.

@@ -1,5 +1,5 @@
 // Crea (o actualiza) el schedule de QStash que pega a /api/cron/sync-live
-// cada 5 minutos. Idempotente: si ya existe, lo actualiza.
+// cada 10 minutos. Idempotente: si ya existe, lo actualiza.
 //
 // Pre-requisitos:
 //   - QSTASH_TOKEN en .env.local (https://console.upstash.com → QStash → Tokens)
@@ -8,14 +8,18 @@
 // Uso:
 //   node --env-file=.env.local scripts/setup-qstash-cron.mjs
 //
-// Por qué cada 5 min y no 3:
-//   Free tier de QStash = 500 mensajes/día. 5 min = 288/día (margen). 3 min = 480/día.
+// Por qué cada 10 min:
+//   El cuello de botella NO es QStash (free = 500 msg/día) sino API-Football
+//   (free = 100 req/día). A 10 min son 144 ticks/día y, con la ventana de juego
+//   achicada en sync-live.ts, ~50-70 llamadas reales/día → cómodo bajo 100.
+//   A 5 min nos pasábamos y suspendían la cuenta. La latencia extra (un gol
+//   tarda hasta 10 min en reflejarse) es aceptable para un prode.
 
 const TOKEN = process.env.QSTASH_TOKEN;
 const CRON_SECRET = process.env.CRON_SECRET;
 const TARGET_URL = "https://prode-amigos-2026.vercel.app/api/cron/sync-live";
 const SCHEDULE_ID = "prode-2026-sync-live"; // ID estable para upsert
-const CRON_EXPR = "*/5 * * * *";
+const CRON_EXPR = "*/10 * * * *";
 
 if (!TOKEN) {
   console.error("Falta QSTASH_TOKEN en .env.local");
