@@ -60,8 +60,10 @@ async function createSchedule() {
       "Upstash-Schedule-Id": SCHEDULE_ID,
       // QStash pasa este header al destino sin el prefijo "Upstash-Forward-"
       "Upstash-Forward-Authorization": `Bearer ${CRON_SECRET}`,
-      // Reintentos: 2 (default 3). Si falla, no inundar.
-      "Upstash-Retries": "2",
+      // Reintentos: 0. Si un tick falla (ej. API caída/suspendida), NO reintentar:
+      // el siguiente tick (5 min) ya cubre. Reintentar multiplicaba las llamadas
+      // fallidas y agravó una suspensión de la cuenta API (2026-06-13).
+      "Upstash-Retries": "0",
     },
     body: JSON.stringify({ source: "scripts/setup-qstash-cron.mjs" }),
   });
