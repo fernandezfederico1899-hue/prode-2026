@@ -1,18 +1,22 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { env } from "@/lib/env";
 import * as schema from "./schema";
 
 /**
- * Cliente Drizzle conectado a Neon vía HTTP (serverless-friendly).
+ * Cliente Drizzle conectado a Supabase Postgres vía el transaction pooler
+ * (Supavisor, puerto 6543). En modo transacción NO se pueden usar prepared
+ * statements, por eso `prepare: false`.
  *
- * Para queries en transacciones largas o sesiones persistentes usar el driver
- * WebSocket (`@neondatabase/serverless` con `Pool`). Para nuestro caso (15 users,
- * queries cortas, Vercel functions) HTTP alcanza y es más rápido en cold start.
+ * Para nuestro caso (pocos users, queries cortas en Vercel functions) el pooler
+ * compartido alcanza y sobra. Las migraciones usan la conexión directa (5432).
  */
-const sql = neon(env.DATABASE_URL);
+const client = postgres(env.DATABASE_URL, { prepare: false });
 
-export const db = drizzle(sql, { schema, logger: env.NODE_ENV === "development" });
+export const db = drizzle(client, {
+  schema,
+  logger: env.NODE_ENV === "development",
+});
 
 export type DB = typeof db;
 export * from "./schema";
