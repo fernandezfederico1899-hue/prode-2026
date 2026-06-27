@@ -1,13 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, isNull, and } from "drizzle-orm";
+import { eq, isNull, and, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { adminAuditLog, matches } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
-import { getGroupStandings } from "@/server/queries/standings";
+import {
+  getGroupStandings,
+  getBestThirdPlaceRanking,
+} from "@/server/queries/standings";
+import { resolveThirdPlaceSlots } from "@/server/knockouts/third-place";
 
 type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -27,7 +31,12 @@ async function requireAdmin() {
  * "3X/Y/Z/..." que requieren input manual del admin).
  */
 export async function resolveKnockoutsAction(): Promise<
-  ActionResult<{ assigned: number; pendingManual: number }>
+  ActionResult<{
+    assigned: number;
+    pendingManual: number;
+    qualifiedThirdGroups: string[];
+    thirdError: string | null;
+  }>
 > {
   const admin = await requireAdmin();
   if (!admin) return { ok: false, error: "unauthorized" };
@@ -52,11 +61,26 @@ export async function resolveKnockoutsAction(): Promise<
     }
   }
 
-  // Iterar matches KO sin team asignado.
+  // Resolver los 8 mejores terceros con la tabla oficial FIFA. Si algo falla
+  // (datos incompletos/corruptos), caemos a asignación manual: thirdAssignments
+  // queda vacío y esos slots cuentan como pendingManual.
+  let thirdAssignments: Record<number, string> = {};
+  let thirdError: string | null = null;
+  let qualifiedThirdGroups: string[] = [];
+  try {
+    const thirdRanking = await getBestThirdPlaceRanking();
+    const resolved = resolveThirdPlaceSlots(thirdRanking);
+    thirdAssignments = resolved.assignments;
+    qualifiedThirdGroups = resolved.qualifiedGroups;
+  } catch (e) {
+    thirdError = e instanceof Error ? e.message : "third_place_failed";
+  }
+
+  // Iterar matches KO con algún lado sin resolver (home O away).
   const koMatches = await db.query.matches.findMany({
     where: and(
       eq(matches.stage, "round_of_32"),
-      isNull(matches.homeTeamId),
+      or(isNull(matches.homeTeamId), isNull(matches.awayTeamId)),
     ),
   });
 
@@ -64,10 +88,17 @@ export async function resolveKnockoutsAction(): Promise<
   let pendingManual = 0;
 
   for (const m of koMatches) {
-    const homeTeamId = m.homeSlot ? slotToTeamId.get(m.homeSlot) : undefined;
-    const awayTeamId = m.awaySlot ? slotToTeamId.get(m.awaySlot) : undefined;
+    // 1°/2° de grupo salen del slot determinístico; el tercero, de la tabla FIFA.
+    let homeTeamId = m.homeSlot ? slotToTeamId.get(m.homeSlot) : undefined;
+    let awayTeamId = m.awaySlot ? slotToTeamId.get(m.awaySlot) : undefined;
+    if (!homeTeamId && m.homeSlot?.startsWith("3") && m.matchNum != null) {
+      homeTeamId = thirdAssignments[m.matchNum];
+    }
+    if (!awayTeamId && m.awaySlot?.startsWith("3") && m.matchNum != null) {
+      awayTeamId = thirdAssignments[m.matchNum];
+    }
 
-    if (homeTeamId || awayTeamId) {
+    if ((homeTeamId && !m.homeTeamId) || (awayTeamId && !m.awayTeamId)) {
       await db
         .update(matches)
         .set({
@@ -89,14 +120,22 @@ export async function resolveKnockoutsAction(): Promise<
     action: "resolve_knockouts",
     targetType: "bracket",
     targetId: "round_of_32",
-    payloadAfter: { assigned, pendingManual } as unknown as Record<string, unknown>,
+    payloadAfter: {
+      assigned,
+      pendingManual,
+      qualifiedThirdGroups,
+      thirdError,
+    } as unknown as Record<string, unknown>,
   });
 
   revalidatePath("/admin/bracket");
   revalidatePath("/bracket");
   revalidatePath("/predict");
 
-  return { ok: true, data: { assigned, pendingManual } };
+  return {
+    ok: true,
+    data: { assigned, pendingManual, qualifiedThirdGroups, thirdError },
+  };
 }
 
 const assignSchema = z.object({

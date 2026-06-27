@@ -9,7 +9,13 @@ export function BracketResolver({ groupsFinished }: { groupsFinished: boolean })
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<
-    | { ok: true; assigned: number; pendingManual: number }
+    | {
+        ok: true;
+        assigned: number;
+        pendingManual: number;
+        qualifiedThirdGroups: string[];
+        thirdError: string | null;
+      }
     | { ok: false; error: string }
     | null
   >(null);
@@ -56,19 +62,40 @@ export function BracketResolver({ groupsFinished }: { groupsFinished: boolean })
       )}
 
       {result && result.ok && (
-        <div className="rounded-md border-2 border-green-500/30 bg-green-500/5 p-3 text-sm flex items-start gap-2">
-          <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5" />
-          <div>
-            <strong>{result.assigned}</strong> slots asignados automáticamente.{" "}
-            {result.pendingManual > 0 ? (
-              <>
-                Quedan <strong>{result.pendingManual}</strong> slots de
-                tercero pendientes — asignalos a mano en los matches abajo.
-              </>
-            ) : (
-              "Todos los matches de 16avos están resueltos."
-            )}
+        <div className="space-y-2">
+          <div className="rounded-md border-2 border-green-500/30 bg-green-500/5 p-3 text-sm flex items-start gap-2">
+            <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5" />
+            <div>
+              <strong>{result.assigned}</strong> slots asignados
+              automáticamente.{" "}
+              {result.pendingManual > 0 ? (
+                <>
+                  Quedan <strong>{result.pendingManual}</strong> slots de
+                  tercero pendientes — asignalos a mano en los matches abajo.
+                </>
+              ) : (
+                "Todos los matches de 16avos están resueltos."
+              )}
+            </div>
           </div>
+
+          {result.thirdError ? (
+            <div className="rounded-md border-2 border-amber-500/30 bg-amber-500/5 p-3 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div>
+                No se pudieron resolver los <strong>terceros</strong> con la
+                tabla FIFA ({result.thirdError}). Asignalos a mano abajo.
+              </div>
+            </div>
+          ) : (
+            result.qualifiedThirdGroups.length === 8 && (
+              <p className="text-xs text-muted-foreground">
+                Mejores terceros clasificados (tabla FIFA):{" "}
+                <strong>{result.qualifiedThirdGroups.join(", ")}</strong>.
+                Verificá contra los cruces oficiales antes de abrir el bracket.
+              </p>
+            )
+          )}
         </div>
       )}
 

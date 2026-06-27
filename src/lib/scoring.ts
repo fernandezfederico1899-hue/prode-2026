@@ -21,6 +21,9 @@ export const POINTS_EXACT = 3;
 export const POINTS_SIGN = 1;
 export const POINTS_WRONG = 0;
 
+// Bracket challenge: 3 pts por cada cruce KO en el que acertás quién avanza.
+export const BRACKET_POINTS_PER_HIT = 3;
+
 /**
  * Calcula los puntos de un pronóstico vs el resultado real.
  *
