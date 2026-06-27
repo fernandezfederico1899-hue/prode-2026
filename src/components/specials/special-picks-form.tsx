@@ -16,6 +16,7 @@ import {
   deleteSpecialPicksAction,
   submitSpecialPicksAction,
 } from "@/server/actions/specials";
+import { PlayerCombobox } from "@/components/specials/player-combobox";
 
 type Picks = {
   championTeamId: string | null;
@@ -270,42 +271,12 @@ function PlayerPickField({
 }) {
   return (
     <FieldShell label={label} points={points}>
-      <Select
-        value={value ?? undefined}
-        onValueChange={onChange}
+      <PlayerCombobox
+        value={value}
+        onChange={onChange}
         disabled={disabled}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Elegí un jugador..." />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((p) => (
-            <SelectItem key={p.id} value={p.id}>
-              {p.photoUrl ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={p.photoUrl}
-                  alt=""
-                  className="w-6 h-6 rounded-full border border-border object-cover bg-muted"
-                />
-              ) : (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={`https://flagcdn.com/${p.team.flagCode}.svg`}
-                  alt=""
-                  className="w-5 h-[15px] rounded-sm border border-border object-cover"
-                />
-              )}
-              <span className="font-semibold">{p.name}</span>
-              <span className="ml-auto text-xs text-muted-foreground">
-                {p.team.fifaCode}
-                {p.shirtNumber ? ` · #${p.shirtNumber}` : ""}
-                {p.position ? ` · ${p.position.slice(0, 3)}` : ""}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        options={options}
+      />
     </FieldShell>
   );
 }
