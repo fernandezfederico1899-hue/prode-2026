@@ -152,6 +152,21 @@ async function applyFixture(
   const homeScore = fixture.goals.home;
   const awayScore = fixture.goals.away;
 
+  // Ganador por penales: sólo cuando el partido termina empatado a 90/120 pero
+  // la API marca un ganador (definición por penales). El marcador a 90 (empate)
+  // sigue contando para los puntos; esto sólo decide quién avanza en el cuadro.
+  const shootoutWinner =
+    newStatus === "finished" &&
+    homeScore !== null &&
+    awayScore !== null &&
+    homeScore === awayScore &&
+    (fixture.result.winner === "HOME_TEAM" ||
+      fixture.result.winner === "AWAY_TEAM")
+      ? fixture.result.winner === "HOME_TEAM"
+        ? "home"
+        : "away"
+      : null;
+
   const changed =
     newStatus !== c.status ||
     homeScore !== c.homeScore ||
@@ -165,6 +180,7 @@ async function applyFixture(
       status: newStatus,
       homeScore,
       awayScore,
+      shootoutWinner,
       apiSportsFixtureId: fixture.fixture.id,
       lastSyncedAt: new Date(),
       finishedAt: newStatus === "finished" ? new Date() : null,

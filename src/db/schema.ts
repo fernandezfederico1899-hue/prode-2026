@@ -206,6 +206,10 @@ export const matches = pgTable(
     status: matchStatus("status").notNull().default("scheduled"),
     homeScore: smallint("home_score"),
     awayScore: smallint("away_score"),
+    // Ganador por penales cuando un KO termina empatado a 90/120: 'home' | 'away'.
+    // Lo setea el sync desde score.winner de football-data; lo usa la propagación
+    // del cuadro para saber quién avanza (el marcador a 90 sigue dando los puntos).
+    shootoutWinner: text("shootout_winner"),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
     lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })

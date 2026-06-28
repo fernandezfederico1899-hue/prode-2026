@@ -27,6 +27,7 @@ export async function propagateKnockoutResults(matchId: string): Promise<{
       awayScore: true,
       homeTeamId: true,
       awayTeamId: true,
+      shootoutWinner: true,
     },
   });
 
@@ -36,13 +37,25 @@ export async function propagateKnockoutResults(matchId: string): Promise<{
   if (m.homeScore === null || m.awayScore === null) return { propagated: 0 };
   if (!m.homeTeamId || !m.awayTeamId) return { propagated: 0 };
 
-  // Para KO no puede haber empate (debería ir a penales/prórroga y resolver).
-  // Si hay empate registrado, no podemos determinar winner — devolvemos 0.
-  if (m.homeScore === m.awayScore) return { propagated: 0 };
-
-  const winnerId =
-    m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId;
-  const loserId = m.homeScore > m.awayScore ? m.awayTeamId : m.homeTeamId;
+  // Determinar quién avanza. Si no hubo empate, gana el del marcador. Si terminó
+  // empatado a 90/120, se define por penales: usamos shootoutWinner (lo setea el
+  // sync desde la API). Si el empate todavía no tiene ganador, no propagamos.
+  let winnerId: string;
+  let loserId: string;
+  if (m.homeScore === m.awayScore) {
+    if (m.shootoutWinner === "home") {
+      winnerId = m.homeTeamId;
+      loserId = m.awayTeamId;
+    } else if (m.shootoutWinner === "away") {
+      winnerId = m.awayTeamId;
+      loserId = m.homeTeamId;
+    } else {
+      return { propagated: 0 };
+    }
+  } else {
+    winnerId = m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId;
+    loserId = m.homeScore > m.awayScore ? m.awayTeamId : m.homeTeamId;
+  }
 
   // Buscar matches downstream que dependan de este matchNum.
   const downstream = await db.query.matches.findMany({

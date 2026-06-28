@@ -43,6 +43,13 @@
       "when": 1782579545156,
       "tag": "0005_nebulous_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782674886274,
+      "tag": "0006_stiff_ink",
+      "breakpoints": true
     }
   ]
 }

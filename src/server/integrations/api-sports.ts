@@ -27,6 +27,11 @@ export type ApiSportsFixture = {
     away: { id: number; name: string };
   };
   goals: { home: number | null; away: number | null };
+  // Ganador real (incluye penales) y duración, para resolver el avance del KO.
+  result: {
+    winner: "HOME_TEAM" | "AWAY_TEAM" | "DRAW" | null;
+    duration: string | null; // REGULAR | EXTRA_TIME | PENALTY_SHOOTOUT
+  };
 };
 
 // --- Tipos de football-data.org (parcial, solo lo que usamos) ---
@@ -37,7 +42,11 @@ type FdMatch = {
   status: string; // SCHEDULED|TIMED|IN_PLAY|PAUSED|FINISHED|SUSPENDED|POSTPONED|CANCELLED|AWARDED
   homeTeam: FdTeam;
   awayTeam: FdTeam;
-  score: { fullTime: { home: number | null; away: number | null } };
+  score: {
+    winner: "HOME_TEAM" | "AWAY_TEAM" | "DRAW" | null;
+    duration: string | null;
+    fullTime: { home: number | null; away: number | null };
+  };
 };
 type FdMatchesResponse = { matches: FdMatch[] };
 
@@ -71,6 +80,10 @@ function adaptMatch(m: FdMatch): ApiSportsFixture {
     goals: {
       home: m.score?.fullTime?.home ?? null,
       away: m.score?.fullTime?.away ?? null,
+    },
+    result: {
+      winner: m.score?.winner ?? null,
+      duration: m.score?.duration ?? null,
     },
   };
 }
