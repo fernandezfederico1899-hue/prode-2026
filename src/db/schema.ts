@@ -292,37 +292,6 @@ export const specialPredictions = pgTable("special_predictions", {
 });
 
 // ============================================================
-// bracket_picks — cuadro de eliminatorias armado por cada usuario
-// (elige qué equipo avanza en cada cruce KO, propagando hasta el campeón)
-// ============================================================
-
-export const bracketPicks = pgTable(
-  "bracket_picks",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: uuid("user_id")
-      .references(() => users.id, { onDelete: "cascade" })
-      .notNull(),
-    // Número de partido KO de openfootball (73-104) cuyo ganador elige el usuario.
-    matchNum: smallint("match_num").notNull(),
-    winnerTeamId: uuid("winner_team_id")
-      .references(() => teams.id)
-      .notNull(),
-    points: smallint("points"), // null = sin calcular; 0 o 3 (acertó el avance)
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    unique("bracket_picks_user_match_unique").on(t.userId, t.matchNum),
-    index("bracket_picks_user_idx").on(t.userId),
-  ],
-);
-
-// ============================================================
 // payments
 // ============================================================
 
@@ -432,7 +401,6 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   accounts: many(accounts),
   predictions: many(predictions),
   specialPredictions: one(specialPredictions),
-  bracketPicks: many(bracketPicks),
   payment: one(payments),
 }));
 
@@ -515,17 +483,6 @@ export const specialPredictionsRelations = relations(
   }),
 );
 
-export const bracketPicksRelations = relations(bracketPicks, ({ one }) => ({
-  user: one(users, {
-    fields: [bracketPicks.userId],
-    references: [users.id],
-  }),
-  winnerTeam: one(teams, {
-    fields: [bracketPicks.winnerTeamId],
-    references: [teams.id],
-  }),
-}));
-
 export const paymentsRelations = relations(payments, ({ one }) => ({
   user: one(users, {
     fields: [payments.userId],
@@ -563,8 +520,6 @@ export type Prediction = typeof predictions.$inferSelect;
 export type NewPrediction = typeof predictions.$inferInsert;
 export type SpecialPrediction = typeof specialPredictions.$inferSelect;
 export type NewSpecialPrediction = typeof specialPredictions.$inferInsert;
-export type BracketPick = typeof bracketPicks.$inferSelect;
-export type NewBracketPick = typeof bracketPicks.$inferInsert;
 export type Payment = typeof payments.$inferSelect;
 export type NewPayment = typeof payments.$inferInsert;
 export type TournamentConfig = typeof tournamentConfig.$inferSelect;
