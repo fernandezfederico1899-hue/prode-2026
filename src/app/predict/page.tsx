@@ -91,20 +91,12 @@ export default async function PredictPage() {
             cargados.
           </p>
         </div>
-        <div className="flex gap-2 self-start">
-          <a
-            href="/bracket/predict"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md border-2 border-primary bg-primary/10 text-primary font-bold uppercase tracking-wide text-sm hover:bg-primary/20 transition-colors"
-          >
-            🗂️ Mi cuadro
-          </a>
-          <a
-            href="/specials"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md border-2 border-accent bg-accent/10 text-accent font-bold uppercase tracking-wide text-sm hover:bg-accent/20 transition-colors"
-          >
-            🏆 Especiales
-          </a>
-        </div>
+        <a
+          href="/specials"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border-2 border-accent bg-accent/10 text-accent font-bold uppercase tracking-wide text-sm hover:bg-accent/20 transition-colors self-start"
+        >
+          🏆 Especiales
+        </a>
       </header>
 
       {groupLetters.map((letter) => (

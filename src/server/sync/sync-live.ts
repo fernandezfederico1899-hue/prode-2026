@@ -5,7 +5,6 @@ import { matches } from "@/db/schema";
 import { apiSports, type ApiSportsFixture } from "@/server/integrations/api-sports";
 import { recalculateForMatch } from "@/server/scoring/recalculate";
 import { propagateKnockoutResults } from "@/server/scoring/propagate-knockouts";
-import { resolveBracketScores } from "@/server/scoring/bracket-score";
 
 // Estados API-Sports → nuestros estados internos.
 const STATUS_MAP: Record<string, "scheduled" | "live" | "finished"> = {
@@ -173,11 +172,10 @@ async function applyFixture(
     })
     .where(eq(matches.id, c.id));
 
-  // Si terminó, recalculamos puntos, propagamos KO y recalculamos el bracket.
+  // Si terminó, recalculamos puntos y propagamos KO (arma la ronda siguiente).
   if (newStatus === "finished") {
     await recalculateForMatch(c.id);
     await propagateKnockoutResults(c.id);
-    await resolveBracketScores();
   }
 
   return true;

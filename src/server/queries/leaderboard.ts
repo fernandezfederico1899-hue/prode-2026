@@ -9,7 +9,6 @@ export type LeaderboardEntry = {
   image: string | null;
   matchPoints: number;
   bonusPoints: number;
-  bracketPoints: number;
   totalPoints: number;
   exactCount: number;
   signCount: number;
@@ -36,9 +35,6 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
       image: users.image,
       matchPoints: sql<number>`coalesce(sum(${predictions.points}), 0)::int`,
       bonusPoints: sql<number>`coalesce(max(${specialPredictions.bonusPoints}), 0)::int`,
-      // Subquery escalar correlacionado: evita inflar los sumatorios de arriba
-      // con el producto cartesiano de las (hasta 31) filas de bracket_picks.
-      bracketPoints: sql<number>`coalesce((select sum(bp.points) from bracket_picks bp where bp.user_id = ${users.id}), 0)::int`,
       exactCount: sql<number>`count(*) filter (where ${predictions.points} = 3)::int`,
       signCount: sql<number>`count(*) filter (where ${predictions.points} = 1)::int`,
       wrongCount: sql<number>`count(*) filter (where ${predictions.points} = 0)::int`,
@@ -55,7 +51,7 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   // Calcular total y ordenar.
   const withTotal = rows.map((r) => ({
     ...r,
-    totalPoints: r.matchPoints + r.bonusPoints + r.bracketPoints,
+    totalPoints: r.matchPoints + r.bonusPoints,
   }));
   withTotal.sort((a, b) => {
     if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
@@ -78,7 +74,6 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
       image: r.image,
       matchPoints: r.matchPoints,
       bonusPoints: r.bonusPoints,
-      bracketPoints: r.bracketPoints,
       totalPoints: r.totalPoints,
       exactCount: r.exactCount,
       signCount: r.signCount,
