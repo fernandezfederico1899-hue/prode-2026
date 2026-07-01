@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { syncLive } from "@/server/sync/sync-live";
+import { reconcilePoints } from "@/server/scoring/reconcile";
 import { env } from "@/lib/env";
 
 // Vercel cron lo invoca cada 3 min (ver vercel.json).
@@ -17,7 +18,33 @@ async function handle(req: Request) {
 
   try {
     const result = await syncLive();
-    return NextResponse.json({ ok: true, ...result });
+
+    // Chequeo de consistencia de puntos (auto-corrige el drift de matches ya
+    // finished cuyo score cambió sin re-scorear). Barato y sin llamadas a la
+    // API; un fallo acá no debe tumbar el sync.
+    let reconcile: {
+      checkedPredictions: number;
+      fixed: number;
+      mismatches: number;
+    } | null = null;
+    try {
+      const r = await reconcilePoints();
+      reconcile = {
+        checkedPredictions: r.checkedPredictions,
+        fixed: r.fixed,
+        mismatches: r.mismatches.length,
+      };
+      if (r.fixed > 0) {
+        console.warn(
+          `[cron/sync-live] reconcile corrigió ${r.fixed} predicciones:`,
+          JSON.stringify(r.mismatches),
+        );
+      }
+    } catch (e) {
+      console.error("[cron/sync-live] reconcile error:", e);
+    }
+
+    return NextResponse.json({ ok: true, ...result, reconcile });
   } catch (err) {
     console.error("[cron/sync-live] error:", err);
     return NextResponse.json(
