@@ -145,6 +145,7 @@ async function applyFixture(
     status: (typeof matches.status.enumValues)[number];
     homeScore: number | null;
     awayScore: number | null;
+    shootoutWinner: string | null;
   },
   fixture: ApiSportsFixture,
 ): Promise<boolean> {
@@ -167,10 +168,14 @@ async function applyFixture(
         : "away"
       : null;
 
+  // Incluimos shootoutWinner: el ganador por penales suele llegar en un sync
+  // posterior (cuando el partido ya figura terminado y empatado). Sin esto,
+  // `changed` daría false y nunca se guardaría ni se re-propagaría el cuadro.
   const changed =
     newStatus !== c.status ||
     homeScore !== c.homeScore ||
-    awayScore !== c.awayScore;
+    awayScore !== c.awayScore ||
+    shootoutWinner !== c.shootoutWinner;
 
   if (!changed) return false;
 
