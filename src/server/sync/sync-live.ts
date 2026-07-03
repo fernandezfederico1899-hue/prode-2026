@@ -91,7 +91,7 @@ export async function syncLive(): Promise<{
     return { callsUsed: 0, matchesUpdated: 0, reason: "no_matches_in_window" };
   }
 
-  // 3. 1 sola llamada para todos los partidos en vivo del mundo.
+  // 3. 1 sola llamada para todos los partidos del Mundial (incluye finalizados).
   const liveFixtures = await apiSports.fetchLiveFixtures();
 
   // 4. Match by team names (openfootballName). Solo si los teams ya están
@@ -127,10 +127,28 @@ export async function syncLive(): Promise<{
     if (await applyFixture(c, fixture)) updated++;
   }
 
+  // 6. Red de seguridad: reconciliar TODOS los finalizados contra la API por
+  // fixture id (0 llamadas extra: ya tenemos la lista completa en memoria).
+  // applyFixture solo escribe si algo cambió, y si cambió re-puntúa y re-propaga
+  // el cuadro. Cubre correcciones tardías (score reemitido, penales que llegan
+  // después de cerrar el partido) y cualquier drift viejo vs la API.
+  const finished = await db.query.matches.findMany({
+    where: eq(matches.status, "finished"),
+  });
+  const byFixtureId = new Map(liveFixtures.map((f) => [f.fixture.id, f]));
+  let reconciled = 0;
+  for (const c of finished) {
+    if (!c.apiSportsFixtureId) continue;
+    const fixture = byFixtureId.get(c.apiSportsFixtureId);
+    if (!fixture) continue;
+    if (await applyFixture(c, fixture)) reconciled++;
+  }
+  updated += reconciled;
+
   return {
     callsUsed,
     matchesUpdated: updated,
-    reason: `${candidates.length} candidatos, ${liveFixtures.length} en vivo global, ${stuckLive.length} resueltos por ID, ${updated} actualizados`,
+    reason: `${candidates.length} candidatos, ${liveFixtures.length} en vivo global, ${stuckLive.length} resueltos por ID, ${reconciled} reconciliados, ${updated} actualizados`,
   };
 }
 

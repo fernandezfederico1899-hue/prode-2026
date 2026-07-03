@@ -26,6 +26,7 @@ export type ApiSportsFixture = {
     home: { id: number; name: string };
     away: { id: number; name: string };
   };
+  // Resultado que cuenta para el puntaje: 90' + prórroga, SIN penales.
   goals: { home: number | null; away: number | null };
   // Ganador real (incluye penales) y duración, para resolver el avance del KO.
   result: {
@@ -45,7 +46,10 @@ type FdMatch = {
   score: {
     winner: "HOME_TEAM" | "AWAY_TEAM" | "DRAW" | null;
     duration: string | null;
+    // fullTime = regularTime + extraTime + penalties (agregado final).
     fullTime: { home: number | null; away: number | null };
+    // Solo presente si hubo definición por penales.
+    penalties?: { home: number | null; away: number | null } | null;
   };
 };
 type FdMatchesResponse = { matches: FdMatch[] };
@@ -60,6 +64,13 @@ const FD_STATUS_TO_SHORT: Record<string, string> = {
   SCHEDULED: "NS",
   // SUSPENDED/POSTPONED/CANCELLED: no mapeamos → applyFixture mantiene el status actual.
 };
+
+// Resta los penales al marcador agregado para quedarnos con 90' + prórroga.
+// En vivo/sin penales `pen` es null → devuelve el marcador tal cual.
+function minusPenalties(full: number | null | undefined, pen: number | null | undefined): number | null {
+  if (full === null || full === undefined) return null;
+  return full - (pen ?? 0);
+}
 
 function adaptMatch(m: FdMatch): ApiSportsFixture {
   return {
@@ -77,9 +88,12 @@ function adaptMatch(m: FdMatch): ApiSportsFixture {
       home: { id: m.homeTeam.id, name: m.homeTeam.name },
       away: { id: m.awayTeam.id, name: m.awayTeam.name },
     },
+    // El puntaje cuenta 90' + prórroga, no los penales. football-data mete el
+    // shootout dentro de fullTime (fullTime = reg + ET + pens), así que lo
+    // restamos. El ganador por penales se resuelve aparte con result.winner.
     goals: {
-      home: m.score?.fullTime?.home ?? null,
-      away: m.score?.fullTime?.away ?? null,
+      home: minusPenalties(m.score?.fullTime?.home, m.score?.penalties?.home),
+      away: minusPenalties(m.score?.fullTime?.away, m.score?.penalties?.away),
     },
     result: {
       winner: m.score?.winner ?? null,
