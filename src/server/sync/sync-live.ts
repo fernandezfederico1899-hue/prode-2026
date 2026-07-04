@@ -83,6 +83,16 @@ export async function syncLive(): Promise<{
         eq(matches.status, "scheduled"),
       ),
       eq(matches.status, "live"),
+      // Red de seguridad: un scheduled cuyo kickoff ya pasó hace rato y sigue sin
+      // resolverse perdió su ventana (cron saltado, delay del feed free que no
+      // marcó IN_PLAY en esos 15min, o equipos asignados tarde por el cuadro KO).
+      // Sin esto queda scheduled para siempre: el paso 6 solo reconcilia finished.
+      // Lo agarramos en el próximo tick, matchea por nombre contra el feed (que ya
+      // dice FINISHED), lo cierra, re-puntúa y propaga el cuadro. 0 llamadas extra.
+      and(
+        eq(matches.status, "scheduled"),
+        lte(matches.kickoffAt, windowStart),
+      ),
     ),
     with: { homeTeam: true, awayTeam: true },
   });
