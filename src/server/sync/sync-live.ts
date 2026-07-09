@@ -4,10 +4,7 @@ import { db } from "@/db";
 import { matches } from "@/db/schema";
 import { apiSports, type ApiSportsFixture } from "@/server/integrations/api-sports";
 import { recalculateForMatch } from "@/server/scoring/recalculate";
-import {
-  propagateKnockoutResults,
-  repairBracket,
-} from "@/server/scoring/propagate-knockouts";
+import { repairBracket } from "@/server/scoring/propagate-knockouts";
 
 // Estados API-Sports → nuestros estados internos.
 const STATUS_MAP: Record<string, "scheduled" | "live" | "finished"> = {
@@ -169,10 +166,9 @@ export async function syncLive(): Promise<{
   }
   updated += reconciled;
 
-  // 7. Cierre del cuadro. `applyFixture` solo propaga cuando el fixture cambió,
-  // así que un partido cuyo resultado ya coincidía con la API pero que dejó su
-  // slot downstream vacío no se propagaría nunca. Acá el cuadro se repara mire
-  // quien mire: es una query, y arriba ya gastamos la llamada a la API.
+  // 7. Cierre del cuadro: única ruta de propagación del sync. Los pasos 4-6 solo
+  // escriben resultados; acá se traducen a los cruces de la ronda siguiente,
+  // hayan cambiado o no. Es una query, y arriba ya gastamos la llamada a la API.
   const finalRepair = await repairBracket();
   const slotsFixed =
     repair.propagated +
@@ -190,8 +186,12 @@ export async function syncLive(): Promise<{
 
 /**
  * Aplica el estado/score de un fixture de API-Sports a nuestro match.
- * Devuelve true si hubo cambios. Si el match terminó, recalcula puntos y
- * propaga KO.
+ * Devuelve true si hubo cambios. Si el match terminó, recalcula los puntos.
+ *
+ * No propaga el cuadro: de eso se encarga el `repairBracket()` con el que
+ * `syncLive` cierra el tick. Propagar acá además obligaba a que el fixture
+ * hubiera cambiado, y un partido cuyo resultado ya coincidía con la API pero que
+ * dejó su slot downstream vacío no se propagaba nunca.
  */
 async function applyFixture(
   c: {
@@ -247,10 +247,9 @@ async function applyFixture(
     })
     .where(eq(matches.id, c.id));
 
-  // Si terminó, recalculamos puntos y propagamos KO (arma la ronda siguiente).
+  // Si terminó, recalculamos los puntos. El cuadro lo arma el paso 7.
   if (newStatus === "finished") {
     await recalculateForMatch(c.id);
-    await propagateKnockoutResults(c.id);
   }
 
   return true;
