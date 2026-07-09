@@ -1,5 +1,5 @@
 import "server-only";
-import { eq, or } from "drizzle-orm";
+import { eq, ne, or } from "drizzle-orm";
 import { db } from "@/db";
 import { matches } from "@/db/schema";
 
@@ -94,4 +94,63 @@ export async function propagateKnockoutResults(matchId: string): Promise<{
   }
 
   return { propagated };
+}
+
+/**
+ * Un slot del cuadro que sigue vacío aunque su partido de origen ya terminó:
+ * el cuadro quedó a medio propagar.
+ */
+async function findUnresolvedSources(): Promise<string[]> {
+  const ko = await db.query.matches.findMany({
+    where: ne(matches.stage, "group"),
+  });
+
+  const finishedByNum = new Map<number, string>();
+  for (const m of ko) {
+    if (m.matchNum !== null && m.status === "finished") {
+      finishedByNum.set(m.matchNum, m.id);
+    }
+  }
+
+  const sourceIds = new Set<string>();
+  for (const m of ko) {
+    // Un slot vacío cuyo origen todavía no se jugó es lo normal, no un problema.
+    if (m.homeTeamId === null && m.homeSourceMatchNum !== null) {
+      const src = finishedByNum.get(m.homeSourceMatchNum);
+      if (src) sourceIds.add(src);
+    }
+    if (m.awayTeamId === null && m.awaySourceMatchNum !== null) {
+      const src = finishedByNum.get(m.awaySourceMatchNum);
+      if (src) sourceIds.add(src);
+    }
+  }
+
+  return [...sourceIds];
+}
+
+/**
+ * Reintenta la propagación de todo origen ya terminado cuyo slot downstream
+ * siga vacío. Idempotente y sin llamadas a la API: repara los casos donde el
+ * ganador ya es determinable pero el propagate original no llegó a correr.
+ *
+ * Lo que no puede reparar sola: un empate sin `shootoutWinner` (los penales que
+ * el feed publica tarde). Esos quedan en `unresolved`, y el sync los usa como
+ * señal de que vale la pena reconciliar contra la API aunque no haya ningún
+ * partido en ventana.
+ */
+export async function repairBracket(): Promise<{
+  propagated: number;
+  unresolved: number;
+}> {
+  const pending = await findUnresolvedSources();
+  if (pending.length === 0) return { propagated: 0, unresolved: 0 };
+
+  let propagated = 0;
+  for (const id of pending) {
+    const r = await propagateKnockoutResults(id);
+    propagated += r.propagated;
+  }
+
+  const stillPending = await findUnresolvedSources();
+  return { propagated, unresolved: stillPending.length };
 }

@@ -4,7 +4,10 @@ import { db } from "@/db";
 import { matches } from "@/db/schema";
 import { apiSports, type ApiSportsFixture } from "@/server/integrations/api-sports";
 import { recalculateForMatch } from "@/server/scoring/recalculate";
-import { propagateKnockoutResults } from "@/server/scoring/propagate-knockouts";
+import {
+  propagateKnockoutResults,
+  repairBracket,
+} from "@/server/scoring/propagate-knockouts";
 
 // Estados API-Sports → nuestros estados internos.
 const STATUS_MAP: Record<string, "scheduled" | "live" | "finished"> = {
@@ -97,8 +100,19 @@ export async function syncLive(): Promise<{
     with: { homeTeam: true, awayTeam: true },
   });
 
-  if (candidates.length === 0) {
-    return { callsUsed: 0, matchesUpdated: 0, reason: "no_matches_in_window" };
+  // 2.5. Reparar el cuadro con lo que ya tenemos (0 llamadas). Si algo queda sin
+  // resolver es un empate al que le falta el ganador por penales: solo la API lo
+  // tiene, así que seguimos aunque no haya ningún partido en ventana. Sin esto,
+  // entre dos rondas no hay candidatos, el early return corta antes del paso 6 y
+  // el cuadro se queda roto hasta que empiece la ronda siguiente.
+  const repair = await repairBracket();
+
+  if (candidates.length === 0 && repair.unresolved === 0) {
+    return {
+      callsUsed: 0,
+      matchesUpdated: repair.propagated,
+      reason: "no_matches_in_window",
+    };
   }
 
   // 3. 1 sola llamada para todos los partidos del Mundial (incluye finalizados).
@@ -155,10 +169,12 @@ export async function syncLive(): Promise<{
   }
   updated += reconciled;
 
+  updated += repair.propagated;
+
   return {
     callsUsed,
     matchesUpdated: updated,
-    reason: `${candidates.length} candidatos, ${liveFixtures.length} en vivo global, ${stuckLive.length} resueltos por ID, ${reconciled} reconciliados, ${updated} actualizados`,
+    reason: `${candidates.length} candidatos, ${liveFixtures.length} en vivo global, ${stuckLive.length} resueltos por ID, ${reconciled} reconciliados, ${repair.propagated} slots del cuadro reparados, ${updated} actualizados`,
   };
 }
 
