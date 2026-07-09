@@ -110,7 +110,7 @@ export async function syncLive(): Promise<{
   if (candidates.length === 0 && repair.unresolved === 0) {
     return {
       callsUsed: 0,
-      matchesUpdated: repair.propagated,
+      matchesUpdated: repair.propagated + repair.corrected,
       reason: "no_matches_in_window",
     };
   }
@@ -169,12 +169,22 @@ export async function syncLive(): Promise<{
   }
   updated += reconciled;
 
-  updated += repair.propagated;
+  // 7. Cierre del cuadro. `applyFixture` solo propaga cuando el fixture cambió,
+  // así que un partido cuyo resultado ya coincidía con la API pero que dejó su
+  // slot downstream vacío no se propagaría nunca. Acá el cuadro se repara mire
+  // quien mire: es una query, y arriba ya gastamos la llamada a la API.
+  const finalRepair = await repairBracket();
+  const slotsFixed =
+    repair.propagated +
+    repair.corrected +
+    finalRepair.propagated +
+    finalRepair.corrected;
+  updated += finalRepair.propagated + finalRepair.corrected;
 
   return {
     callsUsed,
     matchesUpdated: updated,
-    reason: `${candidates.length} candidatos, ${liveFixtures.length} en vivo global, ${stuckLive.length} resueltos por ID, ${reconciled} reconciliados, ${repair.propagated} slots del cuadro reparados, ${updated} actualizados`,
+    reason: `${candidates.length} candidatos, ${liveFixtures.length} en vivo global, ${stuckLive.length} resueltos por ID, ${reconciled} reconciliados, ${slotsFixed} slots del cuadro reparados, ${updated} actualizados`,
   };
 }
 
