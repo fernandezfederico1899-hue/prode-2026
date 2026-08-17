@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, Sparkles, Trophy } from "lucide-react";
 import { getLeaderboard } from "@/server/queries/leaderboard";
-import { getTournamentConfig } from "@/server/queries/tournament-config";
+import {
+  getTournamentConfig,
+  hasTournamentEnded,
+} from "@/server/queries/tournament-config";
 import { getAllPayments } from "@/server/queries/admin";
 import { ConfettiBurst } from "@/components/champion/confetti-burst";
 import { PositionMedal } from "@/components/leaderboard/position-medal";
@@ -11,17 +14,17 @@ import { PositionMedal } from "@/components/leaderboard/position-medal";
 export const dynamic = "force-dynamic";
 
 export default async function ChampionPage() {
-  const [leaderboard, config, payments] = await Promise.all([
+  const [leaderboard, config, payments, tournamentEnded] = await Promise.all([
     getLeaderboard(),
     getTournamentConfig(),
     getAllPayments(),
+    hasTournamentEnded(),
   ]);
 
   const winner = leaderboard[0];
   const top3 = leaderboard.slice(0, 3);
   const paidCount = payments.filter((p) => p.paid).length;
   const pozoTotal = (config?.pozoAmountArs ?? 0) * paidCount;
-  const tournamentEnded = false; // por ahora no podemos detectar "torneo terminó"
 
   if (!winner) {
     return (

@@ -3,7 +3,10 @@ import { ArrowRight, Coins, Network, Trophy, Users } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getAllMatchesForFixture } from "@/server/queries/matches";
 import { getUserPredictionsByMatch } from "@/server/queries/predictions";
-import { getTournamentConfig } from "@/server/queries/tournament-config";
+import {
+  getTournamentConfig,
+  hasTournamentEnded,
+} from "@/server/queries/tournament-config";
 import { getApprovedCount } from "@/server/queries/users";
 import type { Prediction } from "@/lib/types";
 import { FixtureList } from "@/components/match/fixture-list";
@@ -13,15 +16,21 @@ export default async function Home() {
   const userId = session?.user?.id ?? "";
   const userName = session?.user?.name?.split(" ")[0] ?? "";
 
-  const [fixtureMatches, userPredictions, config, approvedCount] =
-    await Promise.all([
-      getAllMatchesForFixture(),
-      userId
-        ? getUserPredictionsByMatch(userId)
-        : Promise.resolve({} as Record<string, Prediction>),
-      getTournamentConfig(),
-      getApprovedCount(),
-    ]);
+  const [
+    fixtureMatches,
+    userPredictions,
+    config,
+    approvedCount,
+    tournamentEnded,
+  ] = await Promise.all([
+    getAllMatchesForFixture(),
+    userId
+      ? getUserPredictionsByMatch(userId)
+      : Promise.resolve({} as Record<string, Prediction>),
+    getTournamentConfig(),
+    getApprovedCount(),
+    hasTournamentEnded(),
+  ]);
 
   // Pronosticables = partidos programados con ambos equipos definidos.
   const pendingCount = fixtureMatches.filter(
@@ -41,6 +50,27 @@ export default async function Home() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 md:py-10 space-y-8">
+      {/* Cierre del prode: puerta de entrada a /champion para todos */}
+      {tournamentEnded && (
+        <Link
+          href="/champion"
+          className="block rounded-xl border-2 border-accent bg-gradient-to-r from-accent/20 to-accent/5 p-4 md:p-5 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <Trophy className="w-9 h-9 md:w-10 md:h-10 text-accent shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-lg md:text-xl leading-tight">
+                EL PRODE TERMINÓ
+              </h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                Mirá quién ganó y cómo quedó el podio final.
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-accent group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </div>
+        </Link>
+      )}
+
       {/* Hero / greeting */}
       <section className="panini-pattern rounded-xl border-2 border-border bg-card p-6 md:p-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
